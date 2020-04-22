@@ -5,9 +5,11 @@ const User = require('./models/user')
 const Notification = require('./models/notification')
 const Post = require('./models/post')
 const Skill = require('./models/skill')
-const { UserInputError, AuthenticationError, ApolloServer, gql } = require('apollo-server')
+// const { UserInputError, AuthenticationError, ApolloServer, gql } = require('apollo-server')
+const { UserInputError, AuthenticationError, ApolloServer, gql } = require('apollo-server-express')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const cors = require('cors')
 
 const JWT_SECRET = process.env.JWT_SECRET
 const MONGODB_URI = process.env.MONGODB_URI
@@ -590,6 +592,7 @@ const resolvers = {
 
     }
 }
+
 const server = new ApolloServer({
     typeDefs,
     resolvers,
@@ -607,6 +610,14 @@ const server = new ApolloServer({
     }
 })
 
-server.listen().then(({ url }) => {
-    console.log(`Server ready at ${url}`)
+const app = express()
+server.applyMiddleware({ app })
+
+app.use(cors())
+
+// server.listen().then(({ url }) => {
+//     console.log(`Server ready at ${url}`)
+// })
+app.listen({ port: 4000 }, () => {
+    console.log('Server running on http://localhost:4000' + server.graphqlPath);
 })
