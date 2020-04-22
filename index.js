@@ -13,6 +13,7 @@ const cors = require('cors')
 
 const JWT_SECRET = process.env.JWT_SECRET
 const MONGODB_URI = process.env.MONGODB_URI
+const port = process.env.PORT || 4000
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
     .then(console.log('Connected to MongoDB'))
@@ -618,6 +619,6 @@ app.use(cors())
 // server.listen().then(({ url }) => {
 //     console.log(`Server ready at ${url}`)
 // })
-app.listen({ port: 4000 }, () => {
-    console.log('Server running on http://localhost:4000' + server.graphqlPath);
+app.listen(port, () => {
+    console.log(`Starting server at ${port}`);
 })
