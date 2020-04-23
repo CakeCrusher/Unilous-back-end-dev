@@ -232,9 +232,7 @@ const resolvers = {
                 return null
             }
             let allPosts = await Post.find({}).populate(['user'])
-            // const containsFilterString = args.filterString ? true : false
-            // const filterString = args.filterString.toLowerCase()
-            const filterString = 'a'
+            const filterString = args.filterString.toLowerCase()
             if (allPosts.length > 1) {
                 const timeSortedTP = allPosts.sort((a, b) => a.time - b.time)
                 const oldestTP = timeSortedTP[0]
