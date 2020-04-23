@@ -5,7 +5,6 @@ const User = require('./models/user')
 const Notification = require('./models/notification')
 const Post = require('./models/post')
 const Skill = require('./models/skill')
-// const { UserInputError, AuthenticationError, ApolloServer, gql } = require('apollo-server')
 const { UserInputError, AuthenticationError, ApolloServer, gql } = require('apollo-server-express')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
@@ -233,7 +232,9 @@ const resolvers = {
                 return null
             }
             let allPosts = await Post.find({}).populate(['user'])
-            const filterString = args.filterString.toLowerCase()
+            // const containsFilterString = args.filterString ? true : false
+            // const filterString = args.filterString.toLowerCase()
+            const filterString = 'a'
             if (allPosts.length > 1) {
                 const timeSortedTP = allPosts.sort((a, b) => a.time - b.time)
                 const oldestTP = timeSortedTP[0]
