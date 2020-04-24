@@ -22,7 +22,7 @@ const typeDefs = gql`
     type User {
         username: String!
         password: String!
-        email: String!
+        email: String
         referenceLink: String!
         primarySkills: [Skill!]
         secondarySkills: [Skill!]
@@ -132,7 +132,6 @@ const typeDefs = gql`
         createUser(
             username: String!
             password: String!
-            email: String!
             referenceLink: String!
         ): User
         addPrimarySkill(
@@ -423,7 +422,6 @@ const resolvers = {
             const newUser = new User({
                 username: args.username,
                 password: hashedPassword,
-                email: args.email,
                 referenceLink: args.referenceLink
             })
             

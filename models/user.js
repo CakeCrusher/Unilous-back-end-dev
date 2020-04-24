@@ -12,7 +12,6 @@ const schema = new mongoose.Schema({
     },
     email: {
         type: String,
-        require: true,
         unique: true,
     },
     referenceLink: {

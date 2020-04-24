@@ -48,7 +48,7 @@ const postSchema = new mongoose.Schema({
     description: {
         type: String,
         minlength: 100,
-        maxlength: 1500,
+        maxlength: 3000,
         require: true,
         unique: true,
     },
