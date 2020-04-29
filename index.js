@@ -19,7 +19,7 @@ mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
     .then(console.log('Connected to MongoDB'))
     .catch(error => console.log(`Failed to establish connection: ${error}`))
 
-const typeDefs = 
+// const typeDefs = typeDefs
 
 
 const resolvers = {
