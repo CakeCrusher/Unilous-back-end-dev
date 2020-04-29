@@ -2,9 +2,11 @@ require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const User = require('./models/user')
-const typeDefs = require('./typeDefs')
+const modelTypeDefs = require('./typeDefs/models')
+const mutationTypeDefs = require('./typeDefs/mutations')
+const queryTypeDefs = require('./typeDefs/queries')
 const resolvers = require('./resolvers')
-const { ApolloServer } = require('apollo-server-express')
+const { gql, ApolloServer } = require('apollo-server-express')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
 const JWT_SECRET = process.env.JWT_SECRET
@@ -14,6 +16,12 @@ const port = process.env.PORT || 4000
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
     .then(console.log('Connected to MongoDB'))
     .catch(error => console.log(`Failed to establish connection: ${error}`))
+
+const typeDefs = gql`
+    ${modelTypeDefs}
+    ${mutationTypeDefs}
+    ${queryTypeDefs}
+`
 
 const server = new ApolloServer({
     typeDefs,
