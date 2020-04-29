@@ -2,9 +2,14 @@ require('dotenv').config()
 const express = require('express')
 const mongoose = require('mongoose')
 const User = require('./models/user')
+
 const modelTypeDefs = require('./typeDefs/models')
 const mutationTypeDefs = require('./typeDefs/mutations')
 const queryTypeDefs = require('./typeDefs/queries')
+
+const mutationResolvers = require('./resolvers/mutations')
+const queryResolvers = require('./resolvers/queries')
+
 const resolvers = require('./resolvers')
 const { gql, ApolloServer } = require('apollo-server-express')
 const jwt = require('jsonwebtoken')
@@ -22,6 +27,11 @@ const typeDefs = gql`
     ${mutationTypeDefs}
     ${queryTypeDefs}
 `
+
+const resolvers = {
+    ...mutationResolvers,
+    ...queryResolvers
+}
 
 const server = new ApolloServer({
     typeDefs,
