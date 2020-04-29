@@ -10,7 +10,6 @@ const queryTypeDefs = require('./typeDefs/queries')
 const mutationResolvers = require('./resolvers/mutations')
 const queryResolvers = require('./resolvers/queries')
 
-// const resolvers = require('./resolvers')
 const { gql, ApolloServer } = require('apollo-server-express')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
@@ -55,9 +54,6 @@ server.applyMiddleware({ app })
 
 app.use(cors())
 
-// server.listen().then(({ url }) => {
-//     console.log(`Server ready at ${url}`)
-// })
 app.listen(port, () => {
     console.log(`Starting server at ${port}`);
 })
