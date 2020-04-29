@@ -1,7 +1,7 @@
-const User = require('./models/user')
-const Notification = require('./models/notification')
-const Post = require('./models/post')
-const Skill = require('./models/skill')
+const User = require('../models/user')
+const Notification = require('../models/notification')
+const Post = require('../models/post')
+const Skill = require('../models/skill')
 const bcrypt = require('bcrypt')
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 
