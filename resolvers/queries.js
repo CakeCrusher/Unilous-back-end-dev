@@ -90,6 +90,7 @@ module.exports = {
                 for (const skill of post.skillNames) {
                     if (filterString.includes(skill)) return true
                 }
+                
                 return false
             }
             for (const post of allPosts) {
