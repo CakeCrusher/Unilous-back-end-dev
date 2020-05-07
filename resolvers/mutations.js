@@ -257,6 +257,13 @@ module.exports = {
             await Post.deleteOne({_id: args.postId})
             return 'post successfully deleted'
         },
+        editPostContactLink: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+            await Post.updateOne({_id: args.postId}, {contactLink: args.contactLink})
+            return Post.findById(args.postId)
+        },
         addSkill: async (root, args) => {
             const newSkill = new Skill({
                 name: args.name.toLowerCase(),

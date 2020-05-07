@@ -71,6 +71,10 @@ type Mutation {
     deletePost(
         postId: ID!
     ): String!
+    editPostContactLink(
+        postId: ID!
+        contactLink: String!
+    ): Post!
     addSkill(
         name: String!
     ): Skill!
