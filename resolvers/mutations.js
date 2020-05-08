@@ -189,6 +189,13 @@ module.exports = {
             }
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
+        editPostByDescription: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+            await Post.updateOne({_id: args.postId}, {description: args.description})
+            return Post.findById(args.postId)
+        },
         addPost: async (root, args, context) => {
             if (!context.currentUser) {
                 throw new AuthenticationError('not authenticated')

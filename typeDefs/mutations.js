@@ -1,5 +1,9 @@
 module.exports = `
 type Mutation {
+    editPostByDescription(
+        postId: ID!
+        description: String!
+    ): Post!
     askQuestion(
         userFromId: ID!
         userToId: ID!
