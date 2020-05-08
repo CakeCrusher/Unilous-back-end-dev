@@ -81,6 +81,9 @@ type Mutation {
     updateSkillUse(
         name: String!
     ): Skill!
-
+    editPostByDescription(
+        postId: ID!
+        description: String!
+    ): Post!
 }
 `
