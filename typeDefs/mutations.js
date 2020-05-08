@@ -1,9 +1,5 @@
 module.exports = `
 type Mutation {
-    editPostByDescription(
-        postId: ID!
-        description: String!
-    ): Post!
     askQuestion(
         userFromId: ID!
         userToId: ID!
@@ -75,12 +71,19 @@ type Mutation {
     deletePost(
         postId: ID!
     ): String!
+    editPostContactLink(
+        postId: ID!
+        contactLink: String!
+    ): Post!
     addSkill(
         name: String!
     ): Skill!
     updateSkillUse(
         name: String!
     ): Skill!
-
+    editPostByDescription(
+        postId: ID!
+        description: String!
+    ): Post!
 }
 `

@@ -189,13 +189,6 @@ module.exports = {
             }
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
-        editPostByDescription: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
-            await Post.updateOne({_id: args.postId}, {description: args.description})
-            return Post.findById(args.postId)
-        },
         addPost: async (root, args, context) => {
             if (!context.currentUser) {
                 throw new AuthenticationError('not authenticated')
@@ -264,6 +257,13 @@ module.exports = {
             await Post.deleteOne({_id: args.postId})
             return 'post successfully deleted'
         },
+        editPostContactLink: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+            await Post.updateOne({_id: args.postId}, {contactLink: args.contactLink})
+            return Post.findById(args.postId)
+        },
         addSkill: async (root, args) => {
             const newSkill = new Skill({
                 name: args.name.toLowerCase(),
@@ -274,7 +274,13 @@ module.exports = {
                 .catch(error => console.log(error))
 
             return newSkill
+        },
+        editPostByDescription: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+            await Post.updateOne({_id: args.postId}, {description: args.description})
+            return Post.findById(args.postId)
         }
-
     }
 }
