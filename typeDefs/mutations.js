@@ -71,6 +71,10 @@ type Mutation {
     deletePost(
         postId: ID!
     ): String!
+    editPostByDescription(
+        postId: ID!
+        description: String!
+    ): Post!
     addSkill(
         name: String!
     ): Skill!
@@ -79,4 +83,4 @@ type Mutation {
     ): Skill!
 
 }
-`
+`;
