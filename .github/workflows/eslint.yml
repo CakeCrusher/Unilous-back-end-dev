@@ -7,5 +7,4 @@ jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: garrettluskey/eslint-action@master
+      - uses: iCrawl/action-eslint@v1
