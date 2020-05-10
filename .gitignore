@@ -1,2 +1,5 @@
 node_modules
 .env
+
+# exclusions 
+!/node_modules/.bin/eslint
