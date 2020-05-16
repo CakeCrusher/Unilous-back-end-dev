@@ -1,108 +1,109 @@
 CREATE TABLE user_account
 (
-    id serial PRIMARY KEY,
-    username VARCHAR (50) UNIQUE NOT NULL,
-    password VARCHAR (50) NOT NULL,
-    email VARCHAR (50) UNIQUE,
-    referenceLink TEXT UNIQUE NOT NULL,
-    interests TEXT,
-    created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+	id serial PRIMARY KEY,
+	username VARCHAR (50) UNIQUE NOT NULL,
+	password VARCHAR (50) NOT NULL,
+	email VARCHAR (50) UNIQUE,
+	referenceLink TEXT UNIQUE NOT NULL,
+	interests TEXT,
+	created_on TIMESTAMP NOT NULL DEFAULT NOW(),
 );
 
 CREATE TABLE user_primary_skills
 (
-    id serial PRIMARY KEY,
-    name VARCHAR (50) UNIQUE NOT NULL,
-    uses INTEGER NOT NULL,
-    user_primary_skill_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	name VARCHAR (50) UNIQUE NOT NULL,
+	uses INTEGER NOT NULL,
+	user_primary_skill_id INTEGER NOT NULL
 );
 
 CREATE TABLE user_secondary_skills
 (
-    id serial PRIMARY KEY,
-    name VARCHAR (50) UNIQUE NOT NULL,
-    uses INTEGER NOT NULL,
-    user_secondary_skill_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	name VARCHAR (50) UNIQUE NOT NULL,
+	uses INTEGER NOT NULL,
+	user_secondary_skill_id INTEGER NOT NULL
 );
 
 CREATE TABLE user_interests
 (
-    id serial PRIMARY KEY,
-    ineterst TEXT,
-    user_interest_id INT,
+	id serial PRIMARY KEY,
+	ineterst TEXT,
+	user_interest_id INT,
 
 );
 
 CREATE TABLE user_posts
 (
-    post_id serial PRIMARY KEY,
-    title VARCHAR (100) UNIQUE NOT NULL,
-    contactLink VARCHAR (255) UNIQUE NOT NULL,
-    time DATE NOT NULL DEFAULT NOW(),
-    description TEXT UNIQUE NOT NULL,
-    color VARCHAR (20) NOT NULL,
-    user_posts_id INTEGER NOT NULL
+	post_id serial PRIMARY KEY,
+	title VARCHAR (100) UNIQUE NOT NULL,
+	contactLink VARCHAR (255) UNIQUE NOT NULL,
+	time DATE NOT NULL DEFAULT NOW(),
+	description TEXT UNIQUE NOT NULL,
+	color VARCHAR (20) NOT NULL,
+	isSavedPost INTEGER NOT NULL DEFAULT 0,
+	user_posts_id INTEGER NOT NULL
 );
 
 CREATE TABLE skillNames
 (
-    id serial PRIMARY KEY,
-    type VARCHAR (100) NOT NULL,
-    skill_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type VARCHAR (100) NOT NULL,
+	skill_id INTEGER NOT NULL
 );
 
 CREATE TABLE skillCapacities
 (
-    id serial PRIMARY KEY,
-    type INTEGER NOT NULL,
-    skill_capacity_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type INTEGER NOT NULL,
+	skill_capacity_id INTEGER NOT NULL
 );
 
 CREATE TABLE skillFills
 (
-    id serial PRIMARY KEY,
-    type INTEGER NOT NULL,
-    skill_fill_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type INTEGER NOT NULL,
+	skill_fill_id INTEGER NOT NULL
 );
 
 CREATE TABLE team
 (
-    id serial PRIMARY KEY,
-    type VARCHAR (255),
-    team_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type VARCHAR (255),
+	team_id INTEGER NOT NULL
 );
 
 CREATE TABLE imageLinks
 (
-    id serial PRIMARY KEY,
-    type VARCHAR (255),
-    image_link_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type VARCHAR (255),
+	image_link_id INTEGER NOT NULL
 );
 
 CREATE TABLE referenceLinks
 (
-    id serial PRIMARY KEY,
-    type VARCHAR (255),
-    reference_link_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type VARCHAR (255),
+	reference_link_id INTEGER NOT NULL
 );
 
 CREATE TABLE notification
 (
-    id serial PRIMARY KEY,
-    message TEXT,
-    quetion TEXT,
-    answer TEXT,
-    accepted BOOLEAN,
-    userFrom_id INTEGER NOT NULL,
-    userTo_id INTEGER NOT NULL,
-    post_id INTEGER NOT NULL,
+	id serial PRIMARY KEY,
+	message TEXT,
+	quetion TEXT,
+	answer TEXT,
+	accepted BOOLEAN,
+	userFrom_id INTEGER NOT NULL,
+	userTo_id INTEGER NOT NULL,
+	post_id INTEGER NOT NULL,
 );
 
 CREATE TABLE proposedContribution
 (
-    id serial PRIMARY KEY,
-    type INTEGER,
-    notification_id INTEGER NOT NULL
+	id serial PRIMARY KEY,
+	type INTEGER,
+	notification_id INTEGER NOT NULL
 );
 
 ALTER TABLE user_primary_skills 

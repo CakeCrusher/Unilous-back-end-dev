@@ -37,7 +37,8 @@ type Post {
     description: String!
     color: String!
     imageLinks: [String!]
-    referenceLinks: [String!]
+    referenceLinks: [String!],
+    isSavedPost: Int!,
     _id: ID
 }
 
@@ -51,4 +52,4 @@ type Token {
     value: String!
 }
 
-`
+`;
