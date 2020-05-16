@@ -1,7 +1,4 @@
-require("dotenv").config({ path: '.env-dev-pg' });
-const { Client } = require("pg");
-
-const query = `CREATE TABLE users
+CREATE TABLE users
 (
     ID serial PRIMARY KEY,
     username VARCHAR(255),
@@ -30,20 +27,4 @@ VALUES
 INSERT INTO project
     (creator_id, created, title, description)
 VALUES
-    (1, current_timestamp, 'A project title', 'A simple description')`
-
-const client = new Client({
-  user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD,
-  port: process.env.POSTGRES_PORT,
-});
-
-client.connect();
-
-client.query(query, (err, res) => {
-  console.log(err, res);
-});
-
-module.exports = client;
+    (1, current_timestamp, 'A project title', 'A simple description')

@@ -1,16 +1,10 @@
 module.exports = `
 type User {
-    username: String!
-    password: String!
-    email: String
-    referenceLink: String!
-    primarySkills: [Skill!]
-    secondarySkills: [Skill!]
-    interests: [String!]
-    posts: [Post!]
-    notifications: [Notification!]
-    savedPosts: [Post!]
-    _id: ID
+    id: String!,
+    username: String!,
+    email: String!,
+    joined: String!,
+    last_logged_in: String!,
 }
 
 type Notification {
