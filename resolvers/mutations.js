@@ -2,13 +2,14 @@
 // const Notification = require('../models/notification')
 // const Post = require('../models/post')
 // const Skill = require('../models/skill')
-// const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt')
 // const jwt = require('jsonwebtoken')
 // const JWT_SECRET = process.env.JWT_SECRET
 // const { UserInputError, AuthenticationError } = require('apollo-server-express')
+const db = require("../db")
 
-// module.exports = {
-//     Mutation: {
+module.exports = {
+    Mutation: {
 //         askQuestion: async (root, args, context) => {
 //             if (!context.currentUser) {
 //                 throw new AuthenticationError('not authenticated')
@@ -97,21 +98,21 @@
 //             const notification = await Notification.findById(args.notificationId).populate(['userFrom', 'userTo', 'post'])
 //             return notification
 //         },
-//         createUser: async (root, args) => {
-//             const saltRounds = 10
-//             const hashedPassword = await bcrypt.hash(args.password, saltRounds)
-//             const newUser = new User({
-//                 username: args.username,
-//                 password: hashedPassword,
-//                 referenceLink: args.referenceLink
-//             })
-            
-//             await newUser.save()
-//                 .catch(error => {
-//                     throw new UserInputError(error)
-//                 })
-//             return newUser.populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-//         },
+        createUser: async (root, args) => {
+            const saltRounds = 10
+            const hashedPassword = await bcrypt.hash(args.password, saltRounds)
+            const query = {
+                text: `INSERT INTO user_account (username, password, referenceLink) VALUES ($1, $2, $3) RETURNING *;`,
+                values: [args.username, hashedPassword, args.referenceLink]
+            };
+    
+            const result = await db.query(query, (err, res) => {
+                if(err){
+                    Console.log(err);
+                }
+                return res.rows[0]
+            });
+        },
 //         addPrimarySkill: async (root, args) => {
 //             const user = await User.findById(args.user)
 //             let isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
@@ -269,5 +270,5 @@
 //             return newSkill
 //         }
 
-//     }
-// }
+    }
+}

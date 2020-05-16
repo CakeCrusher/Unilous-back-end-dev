@@ -4,7 +4,6 @@
 // const Skill = require('../models/skill')
 const { AuthenticationError } = require('apollo-server-express')
 const db = require("../db");
-const { GraphQLObjectType, GraphQLID, GraphQLList } = require("graphql");
 
 module.exports = {
     Query: {
@@ -115,16 +114,20 @@ module.exports = {
         // findPost: async (root, args) => {
         //     return Post.findOne({title: args.title}).populate(['user'])
         // },
-        // findUser: (root, args) => {
-        //     return User.findOne({username: args.username}).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-        // },
-        allUsers: async (root, args) => {
+        findUser: async (root, args) => {
             try {
-                const query = `SELECT * FROM users`;
+                const query = `SELECT * FROM user_account WHERE username=$1`
+                const values = [args.username]
       
-                const result = await db.query(query);
-                return result.rows;
+                const result = await db.query(query, values);
+                return result.rows[0];
               } catch (error) {}
+        },
+        allUsers: async (root, args) => {
+            const query = `SELECT * FROM user_account;`;
+    
+            const result = await db.query(query);
+            return result.rows;
         },
         // allPosts: (root, args) => {
         //     return Post.find({}).populate(['user'])
