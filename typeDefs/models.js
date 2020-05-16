@@ -1,8 +1,8 @@
 module.exports = `
 type User {
-    id: String!,
+    id: Int!,
     username: String!,
-    email: String!,
+    email: String,
     joined: String!,
     last_logged_in: String!,
 }

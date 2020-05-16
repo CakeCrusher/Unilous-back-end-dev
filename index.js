@@ -35,18 +35,18 @@ const resolvers = {
 const server = new ApolloServer({
     typeDefs,
     resolvers,
-    // context: async ({req}) => {
-    //     const auth = req ? req.headers.authorization : null
+    context: async ({req}) => {
+        const auth = req ? req.headers.authorization : null
 
-    //     if (auth && auth.startsWith(`${JWT_SECRET} `)) {
-    //         const token = jwt.verify(
-    //             auth.substring(JWT_SECRET.length + 1), JWT_SECRET)
-    //         const currentUser = await User.findById(token._id).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-    //         return { currentUser }
-    //     } else {
-    //         return { currentUser: null }
-    //     }
-    // }
+        if (auth && auth.startsWith(`${JWT_SECRET} `)) {
+            const token = jwt.verify(
+                auth.substring(JWT_SECRET.length + 1), JWT_SECRET)
+            const currentUser = await User.findById(token._id).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
+            return { currentUser }
+        } else {
+            return { currentUser: null }
+        }
+    }
 })
 
 const app = express()
