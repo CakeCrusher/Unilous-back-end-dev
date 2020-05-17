@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express')
-const mongoose = require('mongoose')
+//const mongoose = require('mongoose')
 const User = require('./models/user')
 
 const modelTypeDefs = require('./typeDefs/models')
@@ -17,9 +17,9 @@ const JWT_SECRET = process.env.JWT_SECRET
 const MONGODB_URI = process.env.MONGODB_URI
 const port = process.env.PORT || 4000
 
-mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
-    .then(console.log('Connected to MongoDB'))
-    .catch(error => console.log(`Failed to establish connection: ${error}`))
+// mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
+//     .then(console.log('Connected to MongoDB'))
+//     .catch(error => console.log(`Failed to establish connection: ${error}`))
 
 const typeDefs = gql`
     ${modelTypeDefs}

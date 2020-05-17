@@ -6,7 +6,7 @@ CREATE TABLE user_account
 	email VARCHAR (50) UNIQUE,
 	referenceLink TEXT UNIQUE NOT NULL,
 	interests TEXT,
-	created_on TIMESTAMP NOT NULL DEFAULT NOW(),
+	created_on TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE user_primary_skills
@@ -29,7 +29,7 @@ CREATE TABLE user_interests
 (
 	id serial PRIMARY KEY,
 	ineterst TEXT,
-	user_interest_id INT,
+	user_interest_id INT
 
 );
 
@@ -96,7 +96,7 @@ CREATE TABLE notification
 	accepted BOOLEAN,
 	userFrom_id INTEGER NOT NULL,
 	userTo_id INTEGER NOT NULL,
-	post_id INTEGER NOT NULL,
+	post_id INTEGER NOT NULL
 );
 
 CREATE TABLE proposedContribution
@@ -238,7 +238,7 @@ ALTER TABLE notification
     ON DELETE CASCADE
 ;
 
-ALTER TABLE notification 
+ALTER TABLE notification
 	ADD CONSTRAINT post_id_fkey FOREIGN KEY
 	(
 		post_id
