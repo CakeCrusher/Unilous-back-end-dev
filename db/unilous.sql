@@ -5,32 +5,7 @@ CREATE TABLE user_account
 	password VARCHAR (50) NOT NULL,
 	email VARCHAR (50) UNIQUE,
 	referenceLink TEXT UNIQUE NOT NULL,
-	interests TEXT,
 	created_on TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE user_primary_skills
-(
-	id serial PRIMARY KEY,
-	name VARCHAR (50) UNIQUE NOT NULL,
-	uses INTEGER NOT NULL,
-	user_primary_skill_id INTEGER NOT NULL
-);
-
-CREATE TABLE user_secondary_skills
-(
-	id serial PRIMARY KEY,
-	name VARCHAR (50) UNIQUE NOT NULL,
-	uses INTEGER NOT NULL,
-	user_secondary_skill_id INTEGER NOT NULL
-);
-
-CREATE TABLE user_interests
-(
-	id serial PRIMARY KEY,
-	ineterst TEXT,
-	user_interest_id INT
-
 );
 
 CREATE TABLE user_posts
@@ -105,39 +80,6 @@ CREATE TABLE proposedContribution
 	type INTEGER,
 	notification_id INTEGER NOT NULL
 );
-
-ALTER TABLE user_primary_skills 
-	ADD CONSTRAINT primary_skill_id_fkey FOREIGN KEY
-	(
-		user_primary_skill_id
-	) REFERENCES user_account (
-		id
-	)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE
-;
-
-ALTER TABLE user_secondary_skills 
-	ADD CONSTRAINT secondary_skill_id_fkey FOREIGN KEY
-	(
-		user_secondary_skill_id
-	) REFERENCES user_account (
-		id
-	)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE
-;
-
-ALTER TABLE user_interests 
-	ADD CONSTRAINT ineterst_id_fkey FOREIGN KEY
-	(
-		user_interest_id
-	) REFERENCES user_account (
-		id
-	)
-    ON UPDATE CASCADE
-    ON DELETE CASCADE
-;
 
 ALTER TABLE user_posts 
 	ADD CONSTRAINT posts_id_fkey FOREIGN KEY

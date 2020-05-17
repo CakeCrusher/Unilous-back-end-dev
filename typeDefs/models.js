@@ -4,9 +4,6 @@ type User {
     password: String!
     email: String
     referenceLink: String!
-    primarySkills: [Skill!]
-    secondarySkills: [Skill!]
-    interests: [Interest!]
     posts: [Post!]
     notifications: [Notification!]
     savedPosts: [Post!]
@@ -45,10 +42,6 @@ type Post {
 type Skill {
     name: String!
     uses: Int!
-    _id: ID
-}
-type Interest {
-    ineterst: String!,
     _id: ID
 }
 
