@@ -6,7 +6,7 @@ type User {
     referenceLink: String!
     primarySkills: [Skill!]
     secondarySkills: [Skill!]
-    interests: [Interest!]
+    interests: [String!]
     posts: [Post!]
     notifications: [Notification!]
     savedPosts: [Post!]
@@ -18,7 +18,7 @@ type Notification {
     userTo: User!
     message: String
     post: Post
-    proposedContribution: [ProposedCondition!]
+    proposedContribution: [Int!]
     question: String
     answer: String
     accepted: Boolean
@@ -29,15 +29,15 @@ type Post {
     title: String!
     user: User!
     contactLink: String
-    skillNames: [SkillName!]!
-    skillCapacities: [SkillCapacity!]!
-    skillFills: [SkillFills!]!
-    team: [Team!]
+    skillNames: [String!]!
+    skillCapacities: [Int!]!
+    skillFills: [Int!]!
+    team: [String!]
     time: String!
     description: String!
     color: String!
-    imageLinks: [ImageLinks!]
-    referenceLinks: [ReferenceLinks!],
+    imageLinks: [String!]
+    referenceLinks: [String!],
     isSavedPost: Int!,
     _id: ID
 }
@@ -45,45 +45,6 @@ type Post {
 type Skill {
     name: String!
     uses: Int!
-    _id: ID
-}
-type Interest {
-    ineterst: String!,
-    _id: ID
-}
-
-type SkillName {
-    type: String!,
-    _id: ID
-}
-
-type SkillFills {
-    type: String!,
-    _id: ID
-}
-
-type SkillCapacity {
-    type: Int!,
-    _id: ID
-}
-
-type Team {
-    type: String!,
-    _id: ID
-}
-
-type ImageLinks {
-    type: String!,
-    _id: ID
-}
-
-type ReferenceLinks {
-    type: String!,
-    _id: ID
-}
-
-type ProposedCondition {
-    type: Int!,
     _id: ID
 }
 

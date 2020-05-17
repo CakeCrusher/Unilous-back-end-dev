@@ -254,7 +254,7 @@ ALTER TABLE proposedContribution
 	(
 		notification_id
 	) REFERENCES notification (
-		id
+		post_id
 	)
     ON UPDATE CASCADE
     ON DELETE CASCADE
