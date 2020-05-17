@@ -13,7 +13,7 @@ type Query {
         eventQuery: String
     ): [Post!]
     getListOfPosts(
-        idList: [String]
+        idList: [ID!]
     ): [Post]
     findPost(
         title: String!
@@ -29,7 +29,7 @@ type Query {
     ): [Skill!]
     allNotifications: [Notification!]
     listOfNotifications(
-        notifications: [String!]
+        notifications: [ID!]
     ): [Notification!]
 }
 `

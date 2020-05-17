@@ -26,9 +26,6 @@ type Post {
     title: String!
     user: User!
     contactLink: String
-    skillNames: [SkillName!]!
-    skillCapacities: [SkillCapacity!]!
-    skillFills: [SkillFills!]!
     team: [Team!]
     time: String!
     description: String!
@@ -45,18 +42,10 @@ type Skill {
     _id: ID
 }
 
-type SkillName {
-    type: String!,
-    _id: ID
-}
-
-type SkillFills {
-    type: String!,
-    _id: ID
-}
-
-type SkillCapacity {
-    type: Int!,
+type PostSkills{
+    filled: Int!,
+    needed: Int!,
+    skill: Skill,
     _id: ID
 }
 

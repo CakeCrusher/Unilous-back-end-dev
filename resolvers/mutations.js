@@ -5,34 +5,33 @@
 const bcrypt = require('bcrypt')
 // const jwt = require('jsonwebtoken')
 // const JWT_SECRET = process.env.JWT_SECRET
-// const { UserInputError, AuthenticationError } = require('apollo-server-express')
+const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
 
 module.exports = {
     Mutation: {
-//         askQuestion: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             const userFrom = await User.findById(args.userFromId)
-//             const userTo = await User.findById(args.userToId)
-//             const post = await Post.findById(args.postId)
+        askQuestion: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
-//             const newNotification = new Notification ({
-//                     userFrom,
-//                     userTo,
-//                     post,
-//                     question: args.question
-//                 })
-//             await newNotification.save()
-//                 .catch(error => {
-//                     throw new UserInputError(error)  
-//                 })
-//             await User.update({_id: args.userFromId}, {notifications: userFrom.notifications.concat(newNotification)}, {upsert: true})
-//             await User.update({_id: args.userToId}, {notifications: userTo.notifications.concat(newNotification)}, {upsert: true})
-            
-//             return newNotification.populate(['userFrom', 'userTo', 'post'])
-//         },
+            const query = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
+            const values = [args.userFromId, args.userToId, args.postId, args.question]
+
+            const result = await db.query(query, values);
+
+            const updateUserFromQuery = `UPDATE user_account SET userfrom_id=$1 WHERE id=$1;`
+            const updateUserFromValues = [args.userFromId]
+
+            await db.query(updateUserFromQuery, updateUserFromValues);
+
+            const updateUserToQuery = `UPDATE user_account SET userto_id=$1 WHERE id=$1;`
+            const updateUserToValues = [args.userToId]
+
+            await db.query(updateUserToQuery, updateUserToValues);
+
+            return result.rows[0]
+        },
 //         answerQuestion: async (root, args, context) => {
 //             if (!context.currentUser) {
 //                 throw new AuthenticationError('not authenticated')
@@ -101,36 +100,39 @@ module.exports = {
         createUser: async (root, args) => {
             const saltRounds = 10
             const hashedPassword = await bcrypt.hash(args.password, saltRounds)
-            const query = {
-                text: `INSERT INTO user_account (username, password, referenceLink) VALUES ($1, $2, $3) RETURNING *;`,
-                values: [args.username, hashedPassword, args.referenceLink]
-            };
+            const query =  `INSERT INTO user_account (username, password, referenceLink) VALUES ($1, $2, $3) RETURNING *;`;
+            const values = [args.username, hashedPassword, args.referenceLink]
     
-            const result = await db.query(query, (err, res) => {
-                if(err){
-                    Console.log(err);
-                }
-                return res.rows[0]
-            });
+            const result = await db.query(query, values);
+            return result.rows[0]
         },
-//         addPrimarySkill: async (root, args) => {
-//             const user = await User.findById(args.user)
-//             let isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
-//             if (!isSkill) {
-//                 const newSkill = new Skill({
-//                     name: args.skill.toLowerCase(),
-//                     uses: 1
-//                 })
-//                 await newSkill.save()
-//                     .catch(error => console.log(error))
-//                 isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
-//             } else {
-//                 await Skill.update({name: args.skill.toLowerCase()}, {uses: isSkill.uses + 1}, {upsert: true})
-//             }
-//             await User.update({_id: args.user}, {primarySkills: user.primarySkills.concat(isSkill)}, {upsert: true})
-//             const updatedUser = await User.findById(args.user).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-//             return updatedUser
-//         },
+        //TODO 
+        addPrimarySkill: async (root, args) => {
+            const user = await User.findById(args.user)
+            const skillQuery = `SELECT * FROM skillnames WHERE name=$1`
+            const skillValues = [args.skill.toLowerCase()]
+            const isSkill = await db.query(query, values)
+            if (!isSkill) {
+                const query = `INSERT INTO skillnames (name, uses) VALUES ($1, $2) RETURNING *;`
+                const values = [args.skill.toLowerCase(), 1]
+                await db.query(query, values)
+                const newSkill = new Skill({
+                    name: args.skill.toLowerCase(),
+                    uses: 1
+                })
+                await newSkill.save()
+                    .catch(error => console.log(error))
+                isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
+            } else {
+                const updateSkillQuery = ``
+                await Skill.update({name: args.skill.toLowerCase()}, {uses: isSkill.uses + 1}, {upsert: true})
+            }
+
+            const userUpdateQuery = `UPDATE user_account SET  array_append()`
+            await User.update({_id: args.user}, {primarySkills: user.primarySkills.concat(isSkill)}, {upsert: true})
+            const updatedUser = await User.findById(args.user).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
+            return updatedUser
+        },
 //         addSecondarySkill: async (root, args) => {
 //             const user = await User.findById(args.user)
 //             let isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
@@ -175,100 +177,73 @@ module.exports = {
 //             await User.updateOne({_id: user._id}, {savedPosts: newSavedPosts}, {upsert: true})
 //             return 'post removed from saved posts'
 //         },
-//         login: async (root, args) => {
-//             const user = await User.findOne({ username: args.username })
+        login: async (root, args) => {
+            const query = `SELECT * FROM user_account WHERE username=$1`
+            const values = [args.username]
+            const user = (await db.query(query, values)).rows[0]
             
-//             const correctPassword = user ? await bcrypt.compare(args.password, user.password) : false
+            const correctPassword = user ? await bcrypt.compare(args.password, user.password) : false
             
-//             if (!user || !correctPassword) {
-//                 throw new AuthenticationError('failed login: wrong username or password')
-//             }
+            if (!user || !correctPassword) {
+                throw new AuthenticationError('failed login: wrong username or password')
+            }
 
-//             const userForToken = {
-//                 username: user.username,
-//                 _id: user._id
-//             }
-//             return { value: jwt.sign(userForToken, JWT_SECRET) }
-//         },
-//         addPost: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             let allSkills = []
-//             for (const skill of args.skillNames) {
-//                 const isSkill = await Skill.findOne({name: skill.toLowerCase()})
-//                 if (!isSkill) {
-//                     const newSkill = new Skill({
-//                         name: skill.toLowerCase(),
-//                         uses: 1
-//                     })
-//                     await newSkill.save()
-//                         .catch(error => {
-//                             console.log('TEENY ERROR')
-//                             throw new UserInputError(error)  
-//                         })
-//                     allSkills.push(newSkill.name)
-//                 } else {
-//                     await Skill.update({name: skill.toLowerCase()}, {uses: isSkill.uses + 1}, {upsert: true})
-//                     allSkills.push(isSkill.name)
-//                 }
-//             }
+            const userForToken = {
+                username: user.username,
+                _id: user._id
+            }
+            return { value: jwt.sign(userForToken, JWT_SECRET) }
+        },
+        addPost: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
-//             const user = await User.findById(args.user)
-//             const newPost = new Post({
-//                 title: args.title,
-//                 user: user,
-//                 contactLink: args.contactLink,
-//                 skillNames: allSkills,
-//                 skillCapacities: args.skillCapacities,
-//                 skillFills: args.skillFills,
-//                 team: [],
-//                 time: new Date(),
-//                 description: args.description,
-//                 color: args.color,
-//                 imageLinks: args.imageLinks,
-//                 referenceLinks: args.referenceLinks
-//             })
-//             // And again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skillAnd again testing new skill
-//             await User.updateOne({_id: args.user}, {posts: user.posts.concat(newPost)}, {upsert: true})
-//             const dupCL = await Post.find({contactLink: args.contactLink})
-//             const dupDescription = await Post.find({description: args.description})
-//             if (dupCL.length) {
-//                 throw new UserInputError('duplicate contactLink')  
-//             }
-//             if (dupDescription.length) {
-//                 throw new UserInputError('duplicate description')  
-//             }
-//             await newPost.save()
-//                 .catch(error => {
-//                     throw new UserInputError(error)  
-//                 })
-            
-//             return newPost.populate(['user'])
-//         },
-//         deletePost: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             const postToRemove = await Post.findById(args.postId).populate(['user'])
-//             const postMaker = await User.findById(postToRemove.user._id)
-//             const updatedPosts = postMaker.posts.filter(id => id.toString() !== args.postId)
-//             await User.updateOne({_id: postMaker._id}, {posts: updatedPosts}, {upsert: true})
+            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color, image_links, reference_links, is_saved) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8) RETURNING *;`
+            const postValues = [args.user, args.title, args.contactLink, args.description, args.color, args.imageLinks, args.referenceLinks, 0]
+            const post = (await db.query(postQuery, postValues)).rows[0]
 
-//             await Post.deleteOne({_id: args.postId})
-//             return 'post successfully deleted'
-//         },
-//         addSkill: async (root, args) => {
-//             const newSkill = new Skill({
-//                 name: args.name.toLowerCase(),
-//                 uses: 1
-//             })
+            for(var i = 0; i < args.skillNames.length; i++) {
+                // Get skill if it exists
+                const skillQuery = `SELECT * FROM skills WHERE name=$1;`
+                const skillValues = [args.skillNames[i].toLowerCase()]
+                var foundSkill = await db.query(skillQuery, skillValues)
 
-//             await newSkill.save()
-//                 .catch(error => console.log(error))
+                // If skill does not exist, add skill
+                if(foundSkill.length == 0){
+                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                    const insertSkillValues = [skill.toLowerCase()]
+                    foundSkill = await db.query(insertSkillQuery, insertSkillValues)
+                }
 
-//             return newSkill
-//         }
+                // Increment uses
+                const updateUsesQuery = `UPDATE skills SET uses = uses + 1 WHERE _id = $1;`
+                const updateUsesValues = [foundSkill.rows[0]._id]
+                await db.query(updateUsesQuery, updateUsesValues)
+
+                const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
+                const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.neededSkills[i], args.filledSkills[i]];
+                await db.query(insertPostSkillQuery, insertPostSkillValues)
+            }
+
+            return post;
+        },
+        deletePost: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const query = `DELETE FROM user_posts WHERE _id=$1;`
+            const values = [args.postId]
+            await db.query(query, values)
+            return 'post successfully deleted'
+        },
+        addSkill: async (root, args) => {
+            const query =  `INSERT INTO skills (name) VALUES ($1) RETURNING *;`;
+            const values = [args.name.toLowerCase()]
+    
+            const result = await db.query(query, values);
+            return result.rows[0]
+        }
 
     }
 }

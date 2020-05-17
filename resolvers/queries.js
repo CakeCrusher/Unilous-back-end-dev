@@ -7,24 +7,29 @@ const db = require("../db");
 
 module.exports = {
     Query: {
-        // searchAwaitingNotifs: async (root, args, context) => {
-        //     if (!context.currentUser) {
-        //         throw new AuthenticationError('not authenticated')
-        //     }
-        //     const user = await User.findById(args.userId)
-        //     const pendingNotifs = []
-        //     for (const n of user.notifications) {
-        //         const retrievedNotif = await Notification.findById(n).populate(['userFrom', 'userTo', 'post'])
-        //         if (retrievedNotif && retrievedNotif.userFrom.username !== user.username && (retrievedNotif.proposedContribution.length || retrievedNotif.question) && retrievedNotif.accepted === undefined && !retrievedNotif.answer) {
-        //             pendingNotifs.push(retrievedNotif)
-        //         }
-        //     }
-        //     return pendingNotifs.length
+        searchAwaitingNotifs: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const numPendingNotifications = 0
+            const userQuery = `SELECT * FROM notification WHERE _id=$1;`
+            const userValues = [args.userId]
+            const user = (await db.query(query, query)).rows[0]
 
-        // },
-        // me: (root, args, context) => {
-        //     return context.currentUser
-        // },
+            const notificationQuery = `SELECT * FROM notification WHERE user_id=$1;`
+            const notificationValues = [args.userId]
+            const notifications = await db.query(notificationQuery, notificationValues)
+            for (const notification of notifications.rows) {
+                if (notification && notification.userFrom.username !== user.username && (notification.proposedContribution.length || notification.question) && notification.accepted === undefined && !notification.answer) {
+                    numPendingNotifications++
+                }
+            }
+            return numPendingNotifications
+
+        },
+        me: (root, args, context) => {
+            return context.currentUser
+        },
         // searchAnsweredQToPost: async (root, args, context) => {
         //     const post = await Post.findOne({title: args.title}).populate(['user'])
         //     const correctNotifs = []
@@ -103,54 +108,69 @@ module.exports = {
         //     if (targetPosts.length === 1) return targetPosts
         //     return null
         // },
-        // getListOfPosts: async (root, args) => {
-        //     let allPosts = []
-        //     for (const ins of args.idList) {
-        //         const retrievedPost = await Post.findById(ins).populate(['user'])
-        //         allPosts.push(retrievedPost)
-        //     }
-        //     return allPosts
-        // },
-        // findPost: async (root, args) => {
-        //     return Post.findOne({title: args.title}).populate(['user'])
-        // },
+        getListOfPosts: async (root, args) => {
+            const params = []
+            for(var i = 1; i <= args.idList.length; i++) {
+                params.push('$' + i);
+            }
+
+            const query = 'SELECT * FROM user_posts WHERE post_id IN (' + params.join(',') + ')'
+            const result = await db.query(query, args.idList)
+            return result.rows
+        },
+        findPost: async (root, args) => {
+            const query = `SELECT * FROM user_posts WHERE title=$1`
+            const values = [args.title]
+    
+            const result = await db.query(query, values)
+            return result.rows[0]
+        },
         findUser: async (root, args) => {
-            try {
-                const query = `SELECT * FROM user_account WHERE username=$1`
-                const values = [args.username]
-      
-                const result = await db.query(query, values);
-                return result.rows[0];
-              } catch (error) {}
+            const query = `SELECT * FROM user_account WHERE username=$1`
+            const values = [args.username]
+    
+            const result = await db.query(query, values)
+            return result.rows[0]
         },
         allUsers: async (root, args) => {
-            const query = `SELECT * FROM user_account;`;
+            const query = `SELECT * FROM user_account;`
     
-            const result = await db.query(query);
-            return result.rows;
+            const result = await db.query(query)
+            return result.rows
         },
-        // allPosts: (root, args) => {
-        //     return Post.find({}).populate(['user'])
-        // },
-        // allSkills: (root, args) => {
-        //     return Skill.find({})
-        // },
-        // skillSearch: async(root, args) => {
-        //     const allSkills = await Skill.find({})
-        //     const filteredSkills = allSkills.filter(s => s.name.includes(args.filter))
-        //     const sortedFS = filteredSkills.sort((s1, s2) => (s1.uses > s2.uses) ? -1 : 1)
-        //     return sortedFS
-        // },
-        // allNotifications: (root, args) => {
-        //     return Notification.find({}).populate(['userFrom', 'userTo', 'post'])
-        // },
-        // listOfNotifications: async (root, args) => {
-        //     let allNotifications = []
-        //     for (const i of args.notifications) {
-        //         const retrievedNotification = await Notification.findById(i).populate(['userFrom', 'userTo', 'post'])
-        //         allNotifications.push(retrievedNotification)
-        //     }
-        //     return allNotifications
-        // }
+        allPosts: async (root, args) => {
+            const query = `SELECT * FROM user_posts;`
+    
+            const result = await db.query(query)
+            return result.rows
+        },
+        allSkills: async (root, args) => {
+            const query = `SELECT * FROM skillnames;`
+    
+            const result = await db.query(query)
+            return result.rows
+        },
+        skillSearch: async (root, args) => {
+            const query = `SELECT * FROM Skills WHERE position(name in $1)>-1;`
+            const values = [args.filter]
+            const result = await db.query(query, values)
+            return result.rows.sort((s1, s2) => (s1.uses > s2.uses) ? -1 : 1)
+        },
+        allNotifications: async (root, args) => {
+            const query = `SELECT * FROM notification;`
+    
+            const result = await db.query(query)
+            return result.rows
+        },
+        listOfNotifications: async (root, args) => {
+            const params = []
+            for(var i = 1; i <= args.notifications.length; i++) {
+                params.push('$' + i);
+            }
+
+            const query = 'SELECT * FROM notification WHERE id IN (' + params.join(',') + ')'
+            const result = await db.query(query, args.notifications.map(String))
+            return result.rows
+        }
     }
 }
