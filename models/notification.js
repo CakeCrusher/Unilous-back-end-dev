@@ -1,40 +1,19 @@
-const mongoose = require('mongoose')
+const db = require("../db");
+const { populateUserById } = require('./user')
+const { populatePostById } = require('./post')
 
-const schema = new mongoose.Schema({
-    userFrom: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        require: true,
-    },
-    userTo: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        require: true,
-    },
-    message: {
-        type: String,
-        maxlength: 800,
-    },
-    post: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post'
-    },
-    proposedContribution: [
-        {
-            type: Number,
-        }
-    ],
-    question: {
-        type: String,
-        maxlength: 800,
-    },
-    answer: {
-        type: String,
-        maxlength: 800,
-    },
-    accepted: {
-        type: Boolean,
-    },
-})
+async function populateNotificationById(id){
+    const query = `SELECT * FROM notification WHERE _id=$1`
+    const values = [id]
+    const notification = (await db.query(query, values)).rows[0]
 
-module.exports = mongoose.model('Notification', schema)
+    notification.userFrom = await populateUserById(notification.userfrom_id)
+    notification.userTo = await populateUserById(notification.userto_id)
+    notification.post = null
+    if(notification.post_id) {
+        notification.post = await populatePostById(notification.post_id)
+    }    
+    return notification
+}
+
+module.exports.populateNotificationById = populateNotificationById

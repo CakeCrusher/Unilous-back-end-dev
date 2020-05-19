@@ -1,15 +1,10 @@
-const mongoose = require('mongoose')
+const db = require("../db");
 
-const schema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    uses: {
-        type: Number,
-        required: true,
-    }
-})
+async function populateSkillById(id){
+    const query = `SELECT * FROM skills WHERE _id=$1`
+    const values = [id]
+    const skill = (await db.query(query, values)).rows[0]
+    return skill
+}
 
-module.exports = mongoose.model('Skill', schema)
+module.exports.populateSkillById = populateSkillById

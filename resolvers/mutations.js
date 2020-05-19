@@ -8,6 +8,10 @@ const bcrypt = require('bcrypt')
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
 
+const { populateUserById } = require('../models/user')
+const { populatePostById } = require('../models/post')
+const { populateNotificationById } = require('../models/notification')
+
 module.exports = {
     Mutation: {
         askQuestion: async (root, args, context) => {
@@ -18,165 +22,169 @@ module.exports = {
             const query = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
             const values = [args.userFromId, args.userToId, args.postId, args.question]
 
-            const result = await db.query(query, values);
-
-            const updateUserFromQuery = `UPDATE user_account SET userfrom_id=$1 WHERE id=$1;`
-            const updateUserFromValues = [args.userFromId]
-
-            await db.query(updateUserFromQuery, updateUserFromValues);
-
-            const updateUserToQuery = `UPDATE user_account SET userto_id=$1 WHERE id=$1;`
-            const updateUserToValues = [args.userToId]
-
-            await db.query(updateUserToQuery, updateUserToValues);
-
-            return result.rows[0]
+            const notification = (await db.query(query, values)).rows[0];
+            return await populateNotificationById(notification._id)
         },
-//         answerQuestion: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             await Notification.updateOne({_id: args.notificationId}, {answer: args.response, accepted: true}, {upsert: true})
-//             const notification = await Notification.findById(args.notificationId).populate(['userFrom', 'userTo', 'post'])
-//             return notification
-//         },
-//         makeNotification: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             const userFrom = await User.findById(args.userFromId)
-//             const userTo = await User.findById(args.userToId)
-//             const post = args.postId ? await Post.findById(args.postId) : null
+        answerQuestion: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
-//             const newNotification = post ?
-//                 new Notification({
-//                     userFrom,
-//                     userTo,
-//                     message: args.message,
-//                     post,
-//                     proposedContribution: args.proposedContribution
-//                 })
-//                 :
-//                 new Notification({
-//                     userFrom,
-//                     userTo,
-//                     message: args.message,
-//                     accepted: true,
-//                 })
+            const query = `UPDATE notification SET answer=$1, accepted=$2 WHERE id=$3 RETURNING *;`
+            const values = [args.response, true, args.notificationId]
+            await db.query(query, values);
+            return await populateNotificationById(args.notificationId)
+        },
+        makeNotification: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
-//             await newNotification.save()
-//                 .catch(error => {
-//                     throw new UserInputError(error)    
-//                 })
-//             await User.update({_id: args.userFromId}, {notifications: userFrom.notifications.concat(newNotification)}, {upsert: true})
-//             await User.update({_id: args.userToId}, {notifications: userTo.notifications.concat(newNotification)}, {upsert: true})
-            
-//             return newNotification.populate(['userFrom', 'userTo', 'post'])
-//         },
-//         acceptNotification: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             await Notification.updateOne({_id: args.notificationId}, {accepted: true}, {upsert: true})
-//             const notification = await Notification.findById(args.notificationId).populate(['userFrom', 'userTo', 'post'])
-//             if (notification.proposedContribution.length) {
-//                 const post = await Post.findById(notification.post._id)
-//                 const newFill = []
-//                 for (const i in post.skillFills) {
-//                     newFill.push(post.skillFills[i] + notification.proposedContribution[i])
-//                 }
-//                 await Post.updateOne({_id: notification.post._id}, {team: post.team.concat(notification.userFrom.username), skillFills: newFill}, {upsert: true})
-//             }
-//             return notification
-//         },
-//         declineNotification: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             await Notification.updateOne({_id: args.notificationId}, {accepted: false}, {upsert: true})
-//             const notification = await Notification.findById(args.notificationId).populate(['userFrom', 'userTo', 'post'])
-//             return notification
-//         },
+            const postQuery = `SELECT * FROM user_posts WHERE _id = $1;`
+            const postValues = [args.postId]
+            const post = (await db.query(postQuery, postValues)).rows
+
+            var newNotification;
+            if(post.length > 0)
+            {
+                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
+                const createNotificationValues = [args.userFromId, args.userToId, args.postId, args.message]
+                newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+            }
+            else
+            {
+                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, question) VALUES ($1, $2, $3) RETURNING *;`
+                const createNotificationValues = [args.userFromId, args.userToId, args.message]
+                newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+            }
+            return await populateNotificationById(newNotification._id)
+        },
+        acceptNotification: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+
+            try {
+                await db.query('BEGIN')
+                const notificationJoinQuery = `SELECT * FROM notification P INNER JOIN proposedcontribution C ON C.notification_id = P._id WHERE P._id=$1`
+                const notificationJoinValues = [args.notificationId]
+                const notification = (await db.query(notificationJoinQuery, notificationJoinValues)).rows;
+                if (notification.proposedContribution.length) {
+                    const postQuery = `SELECT * FROM user_posts P INNER JOIN post_skills C ON C.post_id = P._id WHERE P._id=$1;`
+                    const values = [notification.post_id]
+                    const post = (await db.query(postQuery, values)).rows;
+                    const newFill = []
+                    // TODO switch to new fill model
+                    for (const i in post) {
+                        newFill.push(post[i].filled + notification[i].type)
+                    }
+
+                    const teamUpdateQuery = `INSERT INTO team (user_id) VALUES ($1) RETURNING *;`
+                    const teamUpdateValues = [notification[0].userfrom_id]
+                    await db.query(teamUpdateQuery, teamUpdateValues)
+                }
+                await db.query('COMMIT')
+                return await populateNotificationById(args.notificationId);
+            }
+            catch(e)
+            {
+                await db.query('ROLLBACK')
+                throw e
+            }
+        },
+        declineNotification: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+
+            const query = `UPDATE notification SET accepted=$1 WHERE _id=$2 RETURNING *;`
+            const values = [false, args.notificationId]
+            const notification = (await db.query(query, values)).rows[0];
+            return await populateNotificationById(notification._id);          
+        },
         createUser: async (root, args) => {
             const saltRounds = 10
             const hashedPassword = await bcrypt.hash(args.password, saltRounds)
             const query =  `INSERT INTO user_account (username, password, referenceLink) VALUES ($1, $2, $3) RETURNING *;`;
             const values = [args.username, hashedPassword, args.referenceLink]
     
-            const result = await db.query(query, values);
-            return result.rows[0]
+            const user = (await db.query(query, values)).rows[0];
+            return populateUserById(user._id)
         },
-        //TODO 
         addPrimarySkill: async (root, args) => {
-            const user = await User.findById(args.user)
-            const skillQuery = `SELECT * FROM skillnames WHERE name=$1`
+            try {
+                await db.query('BEGIN')
+
+                const skillQuery = `SELECT * FROM skills WHERE name=$1`
+                const skillValues = [args.skill.toLowerCase()]
+                var skill = (await db.query(skillQuery, skillValues)).args
+                if (skill.rowCount == 0) {
+                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                    const insertSkillValues = [args.skill.toLowerCase()]
+                    skill = (await db.query(insertSkillQuery, insertSkillValues)).args[0]
+                } else {
+                    skill = skill.args[0]
+                    const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
+                    const updateSkillValues = [skill._id]
+                    await db.query(updateSkillQuery, updateSkillValues)
+                }
+
+                const primarySkillsQuery =  `INSERT INTO user_primary_skills (user_id, skill_id) VALUES ($1, $2);`
+                const primarySkillsValues = [args.user, skill._id]
+                await db.query(primarySkillsQuery, primarySkillsValues)
+                await db.query('COMMIT')
+                return await populateUserById(args.user)
+            } 
+            catch(e)
+            {
+                await db.query('ROLLBACK')
+                throw e
+            }
+            
+        },
+        addSecondarySkill: async (root, args) => {
+            const userQuery = `SELECT * FROM user_account WHERE _id = $1;`
+            const userValues = [args.user]
+            const user = (await db.query(userQuery, userValues)).args[0]
+
+            const skillQuery = `SELECT * FROM skills WHERE name=$1`
             const skillValues = [args.skill.toLowerCase()]
-            const isSkill = await db.query(query, values)
-            if (!isSkill) {
-                const query = `INSERT INTO skillnames (name, uses) VALUES ($1, $2) RETURNING *;`
-                const values = [args.skill.toLowerCase(), 1]
-                await db.query(query, values)
-                const newSkill = new Skill({
-                    name: args.skill.toLowerCase(),
-                    uses: 1
-                })
-                await newSkill.save()
-                    .catch(error => console.log(error))
-                isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
+            var skill = (await db.query(skillQuery, skillValues)).args
+            if (skill.args.length == 0) {
+                const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                const insertSkillValues = [args.skill.toLowerCase()]
+                skill = (await db.query(insertSkillQuery, insertSkillValues)).args[0]
             } else {
-                const updateSkillQuery = ``
-                await Skill.update({name: args.skill.toLowerCase()}, {uses: isSkill.uses + 1}, {upsert: true})
+                skill = skill.args[0]
+                const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
+                const updateSkillValues = [skill._id]
+                await db.query(updateSkillQuery, updateSkillValues)
             }
 
-            const userUpdateQuery = `UPDATE user_account SET  array_append()`
-            await User.update({_id: args.user}, {primarySkills: user.primarySkills.concat(isSkill)}, {upsert: true})
-            const updatedUser = await User.findById(args.user).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-            return updatedUser
+            const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
+            const primarySkillsValues = [args.user, skill._id]
+            await db.query(primarySkillsQuery, primarySkillsValues)
+            return await populateUserById(user._id)
         },
-//         addSecondarySkill: async (root, args) => {
-//             const user = await User.findById(args.user)
-//             let isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
-//             if (!isSkill) {
-//                 const newSkill = new Skill({
-//                     name: args.skill.toLowerCase(),
-//                     uses: 1
-//                 })
-//                 await newSkill.save()
-//                     .catch(error => console.log(error))
-//                 isSkill = await Skill.findOne({name: args.skill.toLowerCase()})
-//             } else {
-//                 await Skill.update({name: args.skill.toLowerCase()}, {uses: isSkill.uses + 1}, {upsert: true})
-//             }
-//             await User.update({_id: args.user}, {secondarySkills: user.secondarySkills.concat(isSkill)}, {upsert: true})
-//             const updatedUser = await User.findById(args.user).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-//             return updatedUser
-//         },
-//         addInterest: async (root, args) => {
-//             const user = await User.findById(args.user)
-//             await User.update({_id: args.user}, {interests: user.interests.concat(args.interest)}, {upsert: true})
-//             const updatedUser = await User.findById(args.user).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-//             return updatedUser
-//         },
-//         savePostToUser: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             const user = await User.findById(args.user)
-//             const postToAdd = await Post.findById(args.postId)
-//             await User.updateOne({_id: args.user}, {savedPosts: user.savedPosts.concat(postToAdd)}, {upsert: true})
-//             const updatedUser = await User.findById(args.user)
-//             return updatedUser.populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-//         },
-//         removeSavedPost: async (root, args, context) => {
-//             if (!context.currentUser) {
-//                 throw new AuthenticationError('not authenticated')
-//             }
-//             const user = await User.findById(args.user)
-//             const newSavedPosts = user.savedPosts.filter(pid => pid.toString() !== args.postId)
-            
-//             await User.updateOne({_id: user._id}, {savedPosts: newSavedPosts}, {upsert: true})
-//             return 'post removed from saved posts'
-//         },
+        savePostToUser: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const addSavedPostQuery =  `INSERT INTO user_saved_posts (user_id, post_id) VALUES ($1, $2) RETURNING *;`
+            const addSavedPostValues = [args.user, args.postId]
+            await db.query(addSavedPostQuery, addSavedPostValues)
+            return await populateUserById(args.user)
+         },
+        removeSavedPost: async (root, args, context) => {
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
+
+            const query = `DELETE FROM user_posts WHERE _id=$1, is_saved=true RETURNING *;`
+            const values = [args.postId]
+            const result = await db.query(query, values)
+            return result.args.length > 0 ? 'post removed from saved posts' : 'post was not removed'
+        },
         login: async (root, args) => {
             const query = `SELECT * FROM user_account WHERE username=$1`
             const values = [args.username]
@@ -199,8 +207,8 @@ module.exports = {
             //     throw new AuthenticationError('not authenticated')
             // }
 
-            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color, image_links, reference_links, is_saved) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8) RETURNING *;`
-            const postValues = [args.user, args.title, args.contactLink, args.description, args.color, args.imageLinks, args.referenceLinks, 0]
+            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color, image_links, reference_links) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7) RETURNING *;`
+            const postValues = [args.user, args.title, args.contactLink, args.description, args.color, args.imageLinks, args.referenceLinks]
             const post = (await db.query(postQuery, postValues)).rows[0]
 
             for(var i = 0; i < args.skillNames.length; i++) {
@@ -210,7 +218,7 @@ module.exports = {
                 var foundSkill = await db.query(skillQuery, skillValues)
 
                 // If skill does not exist, add skill
-                if(foundSkill.length == 0){
+                if(foundSkill.rowCount == 0){
                     const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
                     const insertSkillValues = [skill.toLowerCase()]
                     foundSkill = await db.query(insertSkillQuery, insertSkillValues)
@@ -226,7 +234,7 @@ module.exports = {
                 await db.query(insertPostSkillQuery, insertPostSkillValues)
             }
 
-            return post;
+            return await populatePostById(post._id)
         },
         deletePost: async (root, args, context) => {
             // if (!context.currentUser) {

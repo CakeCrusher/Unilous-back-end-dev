@@ -1,58 +1,37 @@
-const mongoose = require('mongoose')
+const db = require("../db");
 
-const schema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-    },
-    password: {
-        type:String,
-        required: true,
-    },
-    email: {
-        type: String,
-    },
-    referenceLink: {
-        type: String,
-        require: true,
-        unique: true,
-    },
-    primarySkills: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Skill',
-        }
-    ],
-    secondarySkills: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Skill',
-        }
-    ],
-    interests: [
-        {
-            type: String,
-        }
-    ],
-    posts: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Post',
-        }
-    ],
-    notifications: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Notification',
-        }
-    ],
-    savedPosts: [
-        {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Post',
-        }
-    ]
-})
+async function populateUserById(id){
+    const query = `SELECT * FROM user_account WHERE _id=$1`
+    const values = [id]
+    const user = (await db.query(query, values)).rows[0]
 
-module.exports = mongoose.model('User', schema)
+    const primarySkillsQuery = `SELECT * FROM user_primary_skills WHERE user_id=$1;`
+    const primarySkillsValues = [user._id]
+    const primarySkillsResult = await db.query(primarySkillsQuery, primarySkillsValues)
+    user.primarySkills = [...(primarySkillsResult.rows)]
+
+    const secondarySkillsQuery = `SELECT * FROM user_secondary_skills WHERE user_id=$1;`
+    const secondarySkillsValues = [user._id]
+    const secondarySkillsResult = await db.query(secondarySkillsQuery, secondarySkillsValues)
+    user.secondarySkills = [...(secondarySkillsResult.rows)]
+
+    const userPostsQuery = `SELECT * FROM user_posts WHERE user_id=$1;`
+    const userPostsValues = [user._id]
+    const userPostsResult = await db.query(userPostsQuery, userPostsValues)
+    user.posts = [...(userPostsResult.rows)]
+
+    const userSavedPostsQuery = `SELECT * FROM user_saved_posts WHERE user_id=$1;`
+    const userSavedPostsValues = [user._id]
+    const userSavedPostsResult = await db.query(userSavedPostsQuery, userSavedPostsValues)
+    user.savedPosts = [...(userSavedPostsResult.rows)]
+
+    const notificationsQuery = `SELECT * FROM notification WHERE userto_id=$1;`
+    const notificationsValues = [user._id]
+    const notificationsResult = await db.query(notificationsQuery, notificationsValues)
+    user.notifications = [...(notificationsResult.rows)]
+    return user
+}
+
+
+
+module.exports.populateUserById = populateUserById;

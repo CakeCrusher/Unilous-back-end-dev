@@ -30,11 +30,11 @@ type Mutation {
     ): User
     addPrimarySkill(
         user: ID!
-        skill: String!
+        skill: ID!
     ): User
     addSecondarySkill(
         user: ID!
-        skill: String!
+        skill: ID!
     ):User
     addInterest(
         user: ID!

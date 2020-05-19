@@ -1,79 +1,26 @@
-const mongoose = require('mongoose')
-mongoose.set('useFindAndModify', false)
+const db = require("../db");
+const { populateUserById } = require('./user')
 
-const postSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        maxlength: 100,
-        require: true,
-        unique: true,
-    },
-    user: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        require: true,
-    },
-    contactLink: {
-        type: String,
-        require: true,
-        unique: true,
-    },
-    skillNames: [
-        {
-            type: String,
-            require: true,
-        }
-    ],
-    skillCapacities: [
-        {
-            type: Number,
-            require: true,
-        }
-    ],
-    skillFills: [
-        {
-            type: Number,
-            require: true,
-        }
-    ],
-    team: [
-        {
-            type: String
-        }
-    ],
-    time: {
-        type: Date,
-        required:true,
-    },
-    description: {
-        type: String,
-        minlength: 100,
-        maxlength: 3000,
-        require: true,
-        unique: true,
-    },
-    color: {
-        type: String,
-        maxlength: 20,
-        require:true,
-    },
-    imageLinks: [
-        {
-            type: String,
-        }
-    ],
-    referenceLinks: [
-        {
-            type: String
-        }
-    ]
-})
+async function populatePostById(id){
+    const query = `SELECT * FROM user_posts WHERE _id=$1`
+    const values = [id]
+    const post = (await db.query(query, values)).rows[0]
 
-postSchema.set('toJSON', {
-    transform: (document, returnedObject) => {
-        returnedObject._id = returnedObject._id.toString()
-        delete returnedObject._v
+    const skillQuery = `SELECT * FROM skills P INNER JOIN post_skills C ON C.skill_id = P._id WHERE C.post_id=$1;`
+    const skillValues = [post._id]
+    const skillsResult = (await db.query(skillQuery, skillValues)).rows
+
+    post.skillNames = []
+    post.skillCapacities = []
+    post.skillFills = []
+    for(var i = 0; i < skillsResult.rows.length; i++){
+        const skill = skillsResult.rows[i]
+        post.skillFills.append(skill.name)
+        post.skillCapacities.append(skill.needed)
+        post.skillFills.append(skill.filled)
     }
-})
+    post.user = await populateUserById(post.user_id)
+    return post
+}
 
-module.exports = mongoose.model('Post', postSchema)
+module.exports.populatePostById = populatePostById
