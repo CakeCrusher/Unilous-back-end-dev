@@ -15,9 +15,9 @@ const { populateNotificationById } = require('../models/notification')
 module.exports = {
     Mutation: {
         askQuestion: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             const query = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
             const values = [args.userFromId, args.userToId, args.postId, args.question]
@@ -26,9 +26,9 @@ module.exports = {
             return await populateNotificationById(notification._id)
         },
         answerQuestion: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             const query = `UPDATE notification SET answer=$1, accepted=$2 WHERE id=$3 RETURNING *;`
             const values = [args.response, true, args.notificationId]
@@ -36,9 +36,9 @@ module.exports = {
             return await populateNotificationById(args.notificationId)
         },
         makeNotification: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             const postQuery = `SELECT * FROM user_posts WHERE _id = $1;`
             const postValues = [args.postId]
@@ -93,9 +93,9 @@ module.exports = {
             }
         },
         declineNotification: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             const query = `UPDATE notification SET accepted=$1 WHERE _id=$2 RETURNING *;`
             const values = [false, args.notificationId]
@@ -167,9 +167,9 @@ module.exports = {
             return await populateUserById(user._id)
         },
         savePostToUser: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
             const addSavedPostQuery =  `INSERT INTO user_saved_posts (user_id, post_id) VALUES ($1, $2) RETURNING *;`
             const addSavedPostValues = [args.user, args.postId]
             await db.query(addSavedPostQuery, addSavedPostValues)
@@ -203,9 +203,9 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color, image_links, reference_links) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7) RETURNING *;`
             const postValues = [args.user, args.title, args.contactLink, args.description, args.color, args.imageLinks, args.referenceLinks]
@@ -237,9 +237,9 @@ module.exports = {
             return await populatePostById(post._id)
         },
         deletePost: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
             const query = `DELETE FROM user_posts WHERE _id=$1;`
             const values = [args.postId]
             await db.query(query, values)

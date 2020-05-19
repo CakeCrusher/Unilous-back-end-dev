@@ -11,9 +11,9 @@ const { populateNotificationById } = require('../models/notification')
 module.exports = {
     Query: {
         searchAwaitingNotifs: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
             const numPendingNotifications = 0
             const userQuery = `SELECT username FROM notification WHERE _id=$1;`
             const userValues = [args.userId]
