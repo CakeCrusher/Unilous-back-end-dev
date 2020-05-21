@@ -60,22 +60,24 @@ module.exports = {
             return await populateNotificationById(newNotification._id)
         },
         acceptNotification: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
             try {
                 await db.query('BEGIN')
                 const notificationJoinQuery = `SELECT * FROM notification P INNER JOIN proposedcontribution C ON C.notification_id = P._id WHERE P._id=$1`
                 const notificationJoinValues = [args.notificationId]
                 const notification = (await db.query(notificationJoinQuery, notificationJoinValues)).rows;
-                if (notification.proposedContribution.length) {
+                if (true || notification.proposedContribution.length) {
                     const postQuery = `SELECT * FROM user_posts P INNER JOIN post_skills C ON C.post_id = P._id WHERE P._id=$1;`
                     const values = [notification.post_id]
                     const post = (await db.query(postQuery, values)).rows;
                     const newFill = []
                     // TODO switch to new fill model
                     for (const i in post) {
+                        const updateSkillQuery = `UPDATE post_skills SET filled=$1 WHERE _id=$2;`
+                        const updateSkillValues = []
                         newFill.push(post[i].filled + notification[i].type)
                     }
 
