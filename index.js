@@ -1,59 +1,78 @@
-require('dotenv').config()
-const express = require('express')
+require("dotenv").config();
+const express = require("express");
 //const mongoose = require('mongoose')
-const User = require('./models/user')
+const User = require("./models/user");
 
-const modelTypeDefs = require('./typeDefs/models')
-const mutationTypeDefs = require('./typeDefs/mutations')
-const queryTypeDefs = require('./typeDefs/queries')
+const modelTypeDefs = require("./typeDefs/models");
+const mutationTypeDefs = require("./typeDefs/mutations");
+const queryTypeDefs = require("./typeDefs/queries");
 
-const mutationResolvers = require('./resolvers/mutations')
-const queryResolvers = require('./resolvers/queries')
+const mutationResolvers = require("./resolvers/mutations");
+const queryResolvers = require("./resolvers/queries");
 
-const { gql, ApolloServer } = require('apollo-server-express')
-const jwt = require('jsonwebtoken')
-const cors = require('cors')
-const JWT_SECRET = process.env.JWT_SECRET
-const MONGODB_URI = process.env.MONGODB_URI
-const port = process.env.PORT || 4000
+const { gql, ApolloServer } = require("apollo-server-express");
+const jwt = require("jsonwebtoken");
+const cors = require("cors");
+const JWT_SECRET = process.env.JWT_SECRET;
+const MONGODB_URI = process.env.MONGODB_URI;
+const port = process.env.PORT || 4000;
 
 // mongoose.connect(MONGODB_URI, {useNewUrlParser: true})
 //     .then(console.log('Connected to MongoDB'))
 //     .catch(error => console.log(`Failed to establish connection: ${error}`))
 
 const typeDefs = gql`
-    ${modelTypeDefs}
-    ${mutationTypeDefs}
-    ${queryTypeDefs}
-`
+  ${modelTypeDefs}
+  ${mutationTypeDefs}
+  ${queryTypeDefs}
+`;
 
 const resolvers = {
-    ...mutationResolvers,
-    ...queryResolvers
-}
+  ...mutationResolvers,
+  ...queryResolvers,
+};
 
 const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: async ({req}) => {
-        const auth = req ? req.headers.authorization : null
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => {
+    const auth = req ? req.headers.authorization : null;
 
-        if (auth && auth.startsWith(`${JWT_SECRET} `)) {
-            const token = jwt.verify(
-                auth.substring(JWT_SECRET.length + 1), JWT_SECRET)
-            const currentUser = await User.findById(token._id).populate(['primarySkills', 'secondarySkills', 'posts', 'notifications', 'savedPosts'])
-            return { currentUser }
-        } else {
-            return { currentUser: null }
-        }
+    if (auth && auth.startsWith(`${JWT_SECRET} `)) {
+      const token = jwt.verify(
+        auth.substring(JWT_SECRET.length + 1),
+        JWT_SECRET
+      );
+      const currentUser = await User.findById(token._id).populate([
+        "primarySkills",
+        "secondarySkills",
+        "posts",
+        "notifications",
+        "savedPosts",
+      ]);
+      return { currentUser };
+    } else {
+      return { currentUser: null };
     }
-})
+  },
+});
 
-const app = express()
-server.applyMiddleware({ app })
+const app = express();
+server.applyMiddleware({ app });
 
-app.use(cors())
+app.use(cors());
+
+if (process.env.NODE_ENV === "production") {
+  // Exprees will serve up production assets
+  app.use(express.static("client/build"));
+
+  // Express serve up index.html file if it doesn't recognize route
+  const path = require("path");
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "temp_build", "static", "index.html"));
+  });
+}
 
 app.listen(port, () => {
-    console.log(`Starting server at ${port}`);
-})
+  console.log(`Starting server at ${port}`);
+});
