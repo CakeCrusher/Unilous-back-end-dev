@@ -14,7 +14,7 @@ async function populateUserById(id){
     user.primarySkills = [...(primarySkillsResult.rows)]
     console.log(user.primarySkills)
 
-    const secondarySkillsQuery = `SELECT * FROM user_secondary_skills WHERE user_id=$1;`
+    const secondarySkillsQuery = `SELECT s.name, s.uses FROM skills s INNER JOIN user_secondary_skills up ON s._id = up.skill_id WHERE up.user_id=$1;`
     const secondarySkillsValues = [user._id]
     const secondarySkillsResult = await db.query(secondarySkillsQuery, secondarySkillsValues)
     user.secondarySkills = [...(secondarySkillsResult.rows)]

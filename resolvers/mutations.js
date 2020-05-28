@@ -145,7 +145,7 @@ module.exports = {
             
         },
         addSecondarySkill: async (root, args) => {
-            const userQuery = `SELECT * FROM user_account WHERE _id = $1;`
+            /*const userQuery = `SELECT * FROM user_account WHERE _id = $1;`
             const userValues = [args.user]
             const user = (await db.query(userQuery, userValues)).args[0]
 
@@ -166,7 +166,36 @@ module.exports = {
             const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
             const primarySkillsValues = [args.user, skill._id]
             await db.query(primarySkillsQuery, primarySkillsValues)
-            return await populateUserById(user._id)
+            return await populateUserById(user._id)*/
+
+            try {
+                await db.query('BEGIN')
+
+                const skillQuery = `SELECT * FROM skills WHERE name=$1`
+                const skillValues = [args.skill.toLowerCase()]
+                var skill = (await db.query(skillQuery, skillValues))
+                if (skill.rowCount == 0) {
+                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                    const insertSkillValues = [args.skill.toLowerCase()]
+                    skill = (await db.query(insertSkillQuery, insertSkillValues)).rows[0];
+                    const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
+                    const primarySkillsValues = [args.user, skill._id]
+                    await db.query(primarySkillsQuery, primarySkillsValues)
+                } else {
+                    skill = skill.rows[0];
+                    const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
+                    const updateSkillValues = [skill._id]
+                    await db.query(updateSkillQuery, updateSkillValues)
+                }
+                
+                await db.query('COMMIT')
+                return await populateUserById(args.user)
+            } 
+            catch(e)
+            {
+                await db.query('ROLLBACK')
+                throw e
+            }
         },
         savePostToUser: async (root, args, context) => {
             if (!context.currentUser) {
