@@ -130,7 +130,7 @@ module.exports = {
                 } else {
                     skill = skill.rows[0];
                     const isSkillsExists = `SELECT s.name FROM skills s INNER JOIN user_primary_skills up ON s._id = up.skill_id WHERE up.user_id=$1 AND up.skill_id=$2;`
-                    const insertSkillValues = [arg.user, skill._id];
+                    const insertSkillValues = [args.user, skill._id];
                     const isRowExists = await db.query(isSkillsExists, insertSkillValues);
                     if(isRowExists.rowCount == 0) {
                       const primarySkillsQuery =  `INSERT INTO user_primary_skills (user_id, skill_id) VALUES ($1, $2);`
@@ -169,7 +169,7 @@ module.exports = {
                 } else {
                     skill = skill.rows[0];
                     const isSkillsExists = `SELECT s.name FROM skills s INNER JOIN user_secondary_skills up ON s._id = up.skill_id WHERE up.user_id=$1 AND up.skill_id=$2;`
-                    const insertSkillValues = [arg.user, skill._id];
+                    const insertSkillValues = [args.user, skill._id];
                     const isRowExists = await db.query(isSkillsExists, insertSkillValues);
                     if(isRowExists.rowCount == 0) {
                       const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
