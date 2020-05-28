@@ -209,10 +209,18 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
 
-            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color, image_links, reference_links) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7) RETURNING *;`
-            const postValues = [args.user, args.title, args.contactLink, args.description, args.color, args.imageLinks, args.referenceLinks]
+            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *;`
+            const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
             const post = (await db.query(postQuery, postValues)).rows[0]
+            
+            for (let imagelink of args.imageLinks) {
+                await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,[imagelink,args.user,post._id]);
+            };
 
+            for (let referncelink of args.referenceLinks) {
+                await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,[referncelink,args.user,post._id]);
+            };
+            
             for(var i = 0; i < args.skillNames.length; i++) {
                 // Get skill if it exists
                 const skillQuery = `SELECT * FROM skills WHERE name=$1;`

@@ -20,6 +20,21 @@ async function populateUserById(id){
     const userPostsResult = await db.query(userPostsQuery, userPostsValues)
     user.posts = [...(userPostsResult.rows)]
 
+    user.posts.imageLinks = [];
+    user.posts.referenceLinks = [];
+
+    for(var i = 0; i < user.posts.length; i++) {
+        let post_id = user.posts[i]._id
+        const imageLinks = await db.query(`SELECT type FROM imageLinks WHERE user_id=$1 AND post_image_link_id=$2`,[id,post_id]);
+        user.posts[i].imageLinks = imageLinks.rows;
+
+        const referenceLinks = await db.query(`SELECT type FROM referenceLinks WHERE user_id=$1 AND post_reference_link_id=$2`,[id,post_id]);
+        user.posts[i].referenceLinks = imageLinks.rows;
+
+    }
+
+    
+
     const userSavedPostsQuery = `SELECT * FROM user_saved_posts WHERE user_id=$1;`
     const userSavedPostsValues = [user._id]
     const userSavedPostsResult = await db.query(userSavedPostsQuery, userSavedPostsValues)

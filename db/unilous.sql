@@ -246,3 +246,29 @@ ALTER TABLE proposedContribution
     ON UPDATE CASCADE
     ON DELETE CASCADE
 ;
+
+ALTER TABLE imageLinks
+    ADD COLUMN user_id INTEGER NOT NULL;
+
+ALTER TABLE referenceLinks
+    ADD COLUMN user_id INTEGER NOT NULL;
+
+ALTER TABLE imageLinks
+    ADD CONSTRAINT user_image_link_id_fkey FOREIGN KEY 
+	(
+		user_id
+	) REFERENCES user_account(
+		_id
+	)
+	 ON UPDATE CASCADE 
+	 ON DELETE CASCADE;
+
+ALTER TABLE referenceLinks
+    ADD CONSTRAINT user_reference_link_id_fkey FOREIGN KEY 
+	(
+		user_id
+	) REFERENCES user_account(
+		_id
+	)
+	 ON UPDATE CASCADE 
+	 ON DELETE CASCADE;
