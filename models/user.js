@@ -5,6 +5,8 @@ async function populateUserById(id){
     const values = [id]
     const user = (await db.query(query, values)).rows[0]
 
+    console.log(user);
+
     const primarySkillsQuery = `SELECT * FROM user_primary_skills WHERE user_id=$1;`
     const primarySkillsValues = [user._id]
     const primarySkillsResult = await db.query(primarySkillsQuery, primarySkillsValues)
@@ -19,9 +21,6 @@ async function populateUserById(id){
     const userPostsValues = [user._id]
     const userPostsResult = await db.query(userPostsQuery, userPostsValues)
     user.posts = [...(userPostsResult.rows)]
-
-    user.posts.imageLinks = [];
-    user.posts.referenceLinks = [];
 
     for(var i = 0; i < user.posts.length; i++) {
         let post_id = user.posts[i]._id

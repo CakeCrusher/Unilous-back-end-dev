@@ -1,8 +1,8 @@
 CREATE TABLE user_account
 (
 	_id serial PRIMARY KEY,
-	username VARCHAR (50) UNIQUE NOT NULL,
-	password VARCHAR (50) NOT NULL,
+	username character varying(50) UNIQUE NOT NULL,
+	password character varying(60) NOT NULL,
 	email VARCHAR (50) UNIQUE,
 	interests TEXT,
 	referenceLink TEXT UNIQUE NOT NULL,
@@ -264,7 +264,7 @@ ALTER TABLE imageLinks
 	 ON DELETE CASCADE;
 
 ALTER TABLE referenceLinks
-    ADD CONSTRAINT user_reference_link_id_fkey FOREIGN KEY 
+    ADD CONSTRAINT user_image_link_id_fkey FOREIGN KEY 
 	(
 		user_id
 	) REFERENCES user_account(
