@@ -69,13 +69,13 @@ CREATE TABLE user_primary_skills (
 );
 
 CREATE TABLE user_secondary_skills (
-    _id integer NOT NULL,
+   _id serial PRIMARY KEY,
     skill_id INTEGER NOT NULL,
     user_id integer NOT NULL
 );
 
 CREATE TABLE user_saved_posts (
-    _id integer NOT NULL,
+   _id serial PRIMARY KEY,
     user_id integer NOT NULL,
     post_id integer NOT NULL
 );
