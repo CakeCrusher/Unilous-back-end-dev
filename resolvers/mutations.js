@@ -129,6 +129,14 @@ module.exports = {
                     await db.query(primarySkillsQuery, primarySkillsValues)
                 } else {
                     skill = skill.rows[0];
+                    const isSkillsExists = `SELECT s.name FROM skills s INNER JOIN user_primary_skills up ON s._id = up.skill_id WHERE up.user_id=$1 AND up.skill_id=$2;`
+                    const insertSkillValues = [arg.user, skill._id];
+                    const isRowExists = await db.query(isSkillsExists, insertSkillValues);
+                    if(isRowExists.rowCount == 0) {
+                      const primarySkillsQuery =  `INSERT INTO user_primary_skills (user_id, skill_id) VALUES ($1, $2);`
+                      const primarySkillsValues = [args.user, skill._id]
+                      await db.query(primarySkillsQuery, primarySkillsValues)
+                    }
                     const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
                     const updateSkillValues = [skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
@@ -145,29 +153,6 @@ module.exports = {
             
         },
         addSecondarySkill: async (root, args) => {
-            /*const userQuery = `SELECT * FROM user_account WHERE _id = $1;`
-            const userValues = [args.user]
-            const user = (await db.query(userQuery, userValues)).args[0]
-
-            const skillQuery = `SELECT * FROM skills WHERE name=$1`
-            const skillValues = [args.skill.toLowerCase()]
-            var skill = (await db.query(skillQuery, skillValues)).args
-            if (skill.args.length == 0) {
-                const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
-                const insertSkillValues = [args.skill.toLowerCase()]
-                skill = (await db.query(insertSkillQuery, insertSkillValues)).args[0]
-            } else {
-                skill = skill.args[0]
-                const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
-                const updateSkillValues = [skill._id]
-                await db.query(updateSkillQuery, updateSkillValues)
-            }
-
-            const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
-            const primarySkillsValues = [args.user, skill._id]
-            await db.query(primarySkillsQuery, primarySkillsValues)
-            return await populateUserById(user._id)*/
-
             try {
                 await db.query('BEGIN')
 
@@ -183,6 +168,14 @@ module.exports = {
                     await db.query(primarySkillsQuery, primarySkillsValues)
                 } else {
                     skill = skill.rows[0];
+                    const isSkillsExists = `SELECT s.name FROM skills s INNER JOIN user_secondary_skills up ON s._id = up.skill_id WHERE up.user_id=$1 AND up.skill_id=$2;`
+                    const insertSkillValues = [arg.user, skill._id];
+                    const isRowExists = await db.query(isSkillsExists, insertSkillValues);
+                    if(isRowExists.rowCount == 0) {
+                      const primarySkillsQuery =  `INSERT INTO user_secondary_skills (user_id, skill_id) VALUES ($1, $2);`
+                      const primarySkillsValues = [args.user, skill._id]
+                      await db.query(primarySkillsQuery, primarySkillsValues)
+                    }
                     const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
                     const updateSkillValues = [skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
