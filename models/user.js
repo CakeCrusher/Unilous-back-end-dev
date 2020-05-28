@@ -5,7 +5,8 @@ async function populateUserById(id){
     const values = [id]
     const user = (await db.query(query, values)).rows[0]
 
-    console.log(user);
+    //PostgreSQL column names are case-sensitive:
+    user.referenceLink = user.referencelink;
 
     const primarySkillsQuery = `SELECT * FROM user_primary_skills WHERE user_id=$1;`
     const primarySkillsValues = [user._id]
