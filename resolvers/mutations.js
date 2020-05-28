@@ -257,9 +257,9 @@ module.exports = {
                 }
 
                 // Increment uses
-                const updateUsesQuery = `UPDATE skills SET uses = uses + 1 WHERE _id = $1;`
+                /*const updateUsesQuery = `UPDATE skills SET uses = uses + 1 WHERE _id = $1;`
                 const updateUsesValues = [foundSkill.rows[0]._id]
-                await db.query(updateUsesQuery, updateUsesValues)
+                await db.query(updateUsesQuery, updateUsesValues)*/
 
                 const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
                 const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.neededSkills[i], args.filledSkills[i]];
