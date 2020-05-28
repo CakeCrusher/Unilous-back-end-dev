@@ -29,10 +29,12 @@ type Mutation {
         referenceLink: String!
     ): User
     addPrimarySkill(
+        skill: String!
         user: ID!
         skill: ID!
     ): User
     addSecondarySkill(
+        skill: String!
         user: ID!
         skill: ID!
     ):User

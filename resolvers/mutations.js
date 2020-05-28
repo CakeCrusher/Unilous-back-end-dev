@@ -119,13 +119,13 @@ module.exports = {
 
                 const skillQuery = `SELECT * FROM skills WHERE name=$1`
                 const skillValues = [args.skill.toLowerCase()]
-                var skill = (await db.query(skillQuery, skillValues)).args
+                var skill = (await db.query(skillQuery, skillValues))
                 if (skill.rowCount == 0) {
                     const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
                     const insertSkillValues = [args.skill.toLowerCase()]
                     skill = (await db.query(insertSkillQuery, insertSkillValues)).args[0]
                 } else {
-                    skill = skill.args[0]
+                    skill = skill.rows[0];
                     const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
                     const updateSkillValues = [skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
