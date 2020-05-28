@@ -123,7 +123,7 @@ module.exports = {
                 if (skill.rowCount == 0) {
                     const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
                     const insertSkillValues = [args.skill.toLowerCase()]
-                    skill = (await db.query(insertSkillQuery, insertSkillValues)).args[0]
+                    skill = (await db.query(insertSkillQuery, insertSkillValues)).rows[0];
                 } else {
                     skill = skill.rows[0];
                     const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
