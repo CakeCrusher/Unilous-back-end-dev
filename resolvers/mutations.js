@@ -124,16 +124,16 @@ module.exports = {
                     const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
                     const insertSkillValues = [args.skill.toLowerCase()]
                     skill = (await db.query(insertSkillQuery, insertSkillValues)).rows[0];
+                    const primarySkillsQuery =  `INSERT INTO user_primary_skills (user_id, skill_id) VALUES ($1, $2);`
+                    const primarySkillsValues = [args.user, skill._id]
+                    await db.query(primarySkillsQuery, primarySkillsValues)
                 } else {
                     skill = skill.rows[0];
                     const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
                     const updateSkillValues = [skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
                 }
-
-                const primarySkillsQuery =  `INSERT INTO user_primary_skills (user_id, skill_id) VALUES ($1, $2);`
-                const primarySkillsValues = [args.user, skill._id]
-                await db.query(primarySkillsQuery, primarySkillsValues)
+                
                 await db.query('COMMIT')
                 return await populateUserById(args.user)
             } 
