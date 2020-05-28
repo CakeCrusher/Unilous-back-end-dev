@@ -8,13 +8,13 @@ async function populateUserById(id){
     //PostgreSQL column names are case-sensitive:
     user.referenceLink = user.referencelink;
 
-    const primarySkillsQuery = `SELECT s.name, s.uses FROM skills s INNER JOIN user_primary_skills up ON s._id = up.skill_id WHERE up.user_id=$1;`
+    const primarySkillsQuery = `SELECT s.name, up.uses FROM skills s INNER JOIN user_primary_skills up ON s._id = up.skill_id WHERE up.user_id=$1;`
     const primarySkillsValues = [user._id]
     const primarySkillsResult = await db.query(primarySkillsQuery, primarySkillsValues)
     user.primarySkills = [...(primarySkillsResult.rows)]
     console.log(user.primarySkills)
 
-    const secondarySkillsQuery = `SELECT s.name, s.uses FROM skills s INNER JOIN user_secondary_skills up ON s._id = up.skill_id WHERE up.user_id=$1;`
+    const secondarySkillsQuery = `SELECT s.name, up.uses FROM skills s INNER JOIN user_secondary_skills up ON s._id = up.skill_id WHERE up.user_id=$1;`
     const secondarySkillsValues = [user._id]
     const secondarySkillsResult = await db.query(secondarySkillsQuery, secondarySkillsValues)
     user.secondarySkills = [...(secondarySkillsResult.rows)]

@@ -272,3 +272,12 @@ ALTER TABLE referenceLinks
 	)
 	 ON UPDATE CASCADE 
 	 ON DELETE CASCADE;
+
+ALTER TABLE skills 
+DROP  COLUMN if exists uses;
+
+ALTER TABLE  user_primary_skills 
+ADD  COLUMN uses INTEGER DEFAULT 0 NOT NULL;
+
+ALTER TABLE  user_secondary_skills 
+ADD  COLUMN uses INTEGER DEFAULT 0 NOT NULL;

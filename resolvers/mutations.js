@@ -137,8 +137,8 @@ module.exports = {
                       const primarySkillsValues = [args.user, skill._id]
                       await db.query(primarySkillsQuery, primarySkillsValues)
                     }
-                    const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
-                    const updateSkillValues = [skill._id]
+                    const updateSkillQuery = `UPDATE user_primary_skills SET uses = uses + 1 WHERE user_id=$1 AND skill_id=$2;`
+                    const updateSkillValues = [args.user,skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
                 }
                 
@@ -176,8 +176,8 @@ module.exports = {
                       const primarySkillsValues = [args.user, skill._id]
                       await db.query(primarySkillsQuery, primarySkillsValues)
                     }
-                    const updateSkillQuery = `UPDATE skills SET uses = uses + 1 WHERE _id=$1;`
-                    const updateSkillValues = [skill._id]
+                    const updateSkillQuery = `UPDATE user_primary_skills SET uses = uses + 1 WHERE user_id=$1 AND skill_id=$2;`
+                    const updateSkillValues = [args.user,skill._id]
                     await db.query(updateSkillQuery, updateSkillValues)
                 }
                 
