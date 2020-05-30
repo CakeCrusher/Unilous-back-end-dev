@@ -21,10 +21,10 @@ async function populatePostById(id){
     }
     post.user = await populateUserById(post.user_id)
 
-    const teamQuery = `SELECT username FROM user_account P INNER JOIN team C ON C.user_id = P._id WHERE C.user_id=$1;`
+    /*const teamQuery = `SELECT username FROM user_account P INNER JOIN team C ON C.user_id = P._id WHERE C.user_id=$1;`
     const teamValues = [post._id]
     const usernames = (await db.query(teamQuery, teamValues)).rows
-    post.team = [...(usernames.map(user => user.username))]
+    post.team = [...(usernames.map(user => user.username))]*/
     
     return post
 }

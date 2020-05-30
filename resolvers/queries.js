@@ -136,6 +136,21 @@ module.exports = {
     
             const post = (await db.query(query, values)).rows[0]
             return await populatePostById(post._id)
+
+            /*
+              const query = `SELECT * FROM user_posts WHERE title LIKE $1`
+            const values = ['%' + args.title + '%']
+    
+            const posts = (await db.query(query, values)).rows
+            console.log(posts)
+            let getPostsByTitle = []
+            for (let post of posts) {
+                const getPost = await populatePostById(post._id)
+                console.log(getPost)
+                getPostsByTitle.push(getPost)
+            }
+            
+            return getPostsByTitle*/
         },
         findUser: async (root, args) => {
             const query = `SELECT _id FROM user_account WHERE username=$1`

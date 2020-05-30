@@ -228,9 +228,13 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+
+            try {
+
+            await db.query('BEGIN')
 
             const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *;`
             const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
@@ -253,7 +257,7 @@ module.exports = {
                 // If skill does not exist, add skill
                 if(foundSkill.rowCount == 0){
                     const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
-                    const insertSkillValues = [skill.toLowerCase()]
+                    const insertSkillValues = [skillValues]
                     foundSkill = await db.query(insertSkillQuery, insertSkillValues)
                 }
 
@@ -267,7 +271,15 @@ module.exports = {
                 await db.query(insertPostSkillQuery, insertPostSkillValues)
             }
 
+            await db.query('COMMIT')
             return await populatePostById(post._id)
+                
+            } catch (error) {
+                await db.query('ROLLBACK')
+                throw error
+            }
+
+            
         },
         deletePost: async (root, args, context) => {
             if (!context.currentUser) {

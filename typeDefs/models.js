@@ -30,7 +30,6 @@ type Post {
     skillNames: [String!]!
     skillCapacities: [Int!]!
     skillFills: [Int!]!
-    team: [String!]
     time: String!
     description: String!
     color: String!
