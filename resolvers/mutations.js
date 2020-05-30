@@ -4,7 +4,7 @@
 // const Skill = require('../models/skill')
 require("dotenv").config({ path: ".env-dev-pg" });
 const bcrypt = require('bcrypt')
-// const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 const JWT_SECRET = process.env.JWT_SECRET
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
