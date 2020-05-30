@@ -56,7 +56,7 @@ const server = new ApolloServer({
   //   } else {
   //     return { currentUser: null };
   //   }
-  },
+  // },
 });
 
 const app = express();
