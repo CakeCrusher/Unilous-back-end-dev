@@ -4,9 +4,7 @@
 // const Skill = require('../models/skill')
 const { AuthenticationError } = require('apollo-server-express')
 const db = require("../db");
-const { populateUserById } = require('../models/user')
-const { populatePostById } = require('../models/post')
-const { populateNotificationById } = require('../models/notification')
+const { populateUserById, populatePostById, populateNotificationById } = require('../data_models')
 
 module.exports = {
     Query: {
@@ -15,11 +13,11 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
             const numPendingNotifications = 0
-            const userQuery = `SELECT username FROM notification WHERE _id=$1;`
+            const userQuery = `SELECT username FROM user_account WHERE _id=$1;`
             const userValues = [args.userId]
             const user = (await db.query(userQuery, userValues)).rows[0]
 
-            const notificationQuery = `SELECT _id FROM notification WHERE user_id=$1;`
+            const notificationQuery = `SELECT _id FROM notification WHERE userto_id=$1;`
             const notificationValues = [args.userId]
             const notifications = (await db.query(notificationQuery, notificationValues)).rows
                 .map(async notification => populateNotificationById(notification._id))
@@ -37,16 +35,21 @@ module.exports = {
             const query = `SELECT _id FROM user_posts WHERE title=$1;`
             const values = [args.title]
             const postId = (await db.query(query, values)).rows[0]._id
-            const post = populatePostById(postId)
+            const post = await populatePostById(postId)
 
             const correctNotifs = []
-            for (const nid of post.user.notifications) {
-                const notif = await Notification.findById(nid).populate(['userFrom', 'userTo', 'post'])
-                if (notif && notif.answer && notif.post && notif.post.title === args.title) {
-                    correctNotifs.push(notif)
+            if(post != undefined) {
+                for (const notification in post.user.notifications) {
+                    const notif = await populatePostById(notification._id)
+                    if (notif && notif.answer && notif.post && notif.post.title === args.title) {
+                        correctNotifs.push(notif)
+                    }
                 }
+                return correctNotifs.map(async notification => populateNotificationById(notification._id))
             }
-            return correctNotifs.map(async notification => populateNotificationById(notification._id))
+            else{
+                return []
+            }
         },
         searchPosts: async (root, args) => {
             const eventQuery = args.eventQuery
@@ -63,7 +66,9 @@ module.exports = {
             // NOTE will become very expensive after a large number of posts exist
             // currently limited to 100
             const query = `SELECT _id FROM user_posts ORDER BY time ASC LIMIT 100;`
-            let allPosts = (await db.query(query)).rows.map(async post => populatePostById(post._id))
+            let allPosts = (await db.query(query)).rows.map(async post => await populatePostById(post._id))
+            // Resolve all posts
+            allPosts = await Promise.all(allPosts);
             const filterString = args.filterString.toLowerCase()
             if (allPosts.length > 1) {
                 const timeSortedTP = allPosts.sort((a, b) => a.time - b.time)
@@ -91,7 +96,7 @@ module.exports = {
             }
             let targetPosts = []
             const postConditions = (post, eventKeys) => {
-                if (args.postIds.includes(post._id.toString())) return false
+                if (args.postIds != undefined && args.postIds.includes(post._id.toString())) return false
                 if (eventKeys) {
                     for (const keyWord of eventKeys) {
                         if (post.description.toLowerCase().includes(keyWord) || post.title.toLowerCase().includes(keyWord)) {

@@ -40,7 +40,7 @@ CREATE TABLE notification
 (
 	_id serial PRIMARY KEY,
 	message TEXT,
-	quetion TEXT,
+	question TEXT,
 	answer TEXT,
 	accepted BOOLEAN,
 	userfrom_id INTEGER NOT NULL,

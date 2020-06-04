@@ -1,7 +1,5 @@
 require("dotenv").config({ path: ".env-dev-pg" });
 const express = require("express");
-//const mongoose = require('mongoose')
-const User = require("./models/user");
 
 const modelTypeDefs = require("./typeDefs/models");
 const mutationTypeDefs = require("./typeDefs/mutations");

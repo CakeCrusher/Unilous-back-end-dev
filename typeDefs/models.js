@@ -34,6 +34,7 @@ type Post {
     description: String!
     color: String!
     imageLinks: [String!]
+    team: [String!]!
     referenceLinks: [String!]
     _id: ID
 }

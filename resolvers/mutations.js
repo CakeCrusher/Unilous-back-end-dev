@@ -9,9 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
 
-const { populateUserById } = require('../models/user')
-const { populatePostById } = require('../models/post')
-const { populateNotificationById } = require('../models/notification')
+const { populateUserById, populatePostById, populateNotificationById } = require('../data_models')
 
 module.exports = {
     Mutation: {
@@ -20,7 +18,7 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
 
-            const query = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
+            const query = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING _id;`
             const values = [args.userFromId, args.userToId, args.postId, args.question]
 
             const notification = (await db.query(query, values)).rows[0];
@@ -31,7 +29,7 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
 
-            const query = `UPDATE notification SET answer=$1, accepted=$2 WHERE id=$3 RETURNING *;`
+            const query = `UPDATE notification SET answer=$1, accepted=$2 WHERE _id=$3;`
             const values = [args.response, true, args.notificationId]
             await db.query(query, values);
             return await populateNotificationById(args.notificationId)
@@ -48,43 +46,45 @@ module.exports = {
             var newNotification;
             if(post.length > 0)
             {
-                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, post_id, question) VALUES ($1, $2, $3, $4) RETURNING *;`
+                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, post_id, message) VALUES ($1, $2, $3, $4) RETURNING _id;`
                 const createNotificationValues = [args.userFromId, args.userToId, args.postId, args.message]
                 newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
             }
             else
             {
-                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, question) VALUES ($1, $2, $3) RETURNING *;`
+                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, message) VALUES ($1, $2, $3) RETURNING _id;`
                 const createNotificationValues = [args.userFromId, args.userToId, args.message]
                 newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
             }
             return await populateNotificationById(newNotification._id)
         },
         acceptNotification: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             try {
                 await db.query('BEGIN')
-                const notificationJoinQuery = `SELECT * FROM notification P INNER JOIN proposedcontribution C ON C.notification_id = P._id WHERE P._id=$1`
-                const notificationJoinValues = [args.notificationId]
-                const notification = (await db.query(notificationJoinQuery, notificationJoinValues)).rows;
+                const acceptNotificationQuery = `UPDATE notification SET accepted=$1 WHERE _id=$2 RETURNING *;`
+                const acceptNotificationValues = [true, args.notificationId]
+                const notification = (await db.query(acceptNotificationQuery, acceptNotificationValues)).rows[0];
+
+                // TODO remove true and use proper proposed contrib
                 if (true || notification.proposedContribution.length) {
-                    const postQuery = `SELECT * FROM user_posts P INNER JOIN post_skills C ON C.post_id = P._id WHERE P._id=$1;`
+                    const postQuery = `SELECT _id FROM user_posts WHERE _id=$1;`
                     const values = [notification.post_id]
-                    const post = (await db.query(postQuery, values)).rows;
-                    const newFill = []
+                    const posts = (await db.query(postQuery, values)).rows;
                     // TODO switch to new fill model
-                    for (const i in post) {
-                        const updateSkillQuery = `UPDATE post_skills SET filled=$1 WHERE _id=$2;`
-                        const updateSkillValues = []
-                        newFill.push(post[i].filled + notification[i].type)
+                    for (const post in posts) {
+                        const updateSkillQuery = `UPDATE post_skills SET filled=filled + 1 WHERE post_id=$1;`
+                        const updateSkillValues = [post._id]
+                        await db.query(updateSkillQuery, updateSkillValues)
                     }
 
-                    const teamUpdateQuery = `INSERT INTO team (user_id) VALUES ($1) RETURNING *;`
-                    const teamUpdateValues = [notification[0].userfrom_id]
-                    await db.query(teamUpdateQuery, teamUpdateValues)
+                    // TODO add back team
+                    // const teamUpdateQuery = `INSERT INTO team (user_id) VALUES ($1) RETURNING *;`
+                    // const teamUpdateValues = [notification.userfrom_id]
+                    // await db.query(teamUpdateQuery, teamUpdateValues)
                 }
                 await db.query('COMMIT')
                 return await populateNotificationById(args.notificationId);
@@ -228,9 +228,9 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             try {
 
@@ -240,31 +240,41 @@ module.exports = {
             const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
             const post = (await db.query(postQuery, postValues)).rows[0]
             
-            for (let imagelink of args.imageLinks) {
-                await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,[imagelink,args.user,post._id]);
-            };
+            if(args.imageLinks != null){
+                for (let imageLink of args.imageLinks) {
+                    await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,
+                    [imageLink, args.user, post._id]);
+                }
+            }
 
-            for (let referncelink of args.referenceLinks) {
-                await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,[referncelink,args.user,post._id]);
-            };
+            if(args.referenceLinks != null){
+                for (let referenceLink of args.referenceLinks) {
+                    await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,
+                    [referenceLink, args.user, post._id]);
+                }
+            }
             
             for(var i = 0; i < args.skillNames.length; i++) {
                 // Get skill if it exists
-                const skillQuery = `SELECT * FROM skills WHERE name=$1;`
+                const skillQuery = `SELECT _id FROM post_skills WHERE name=$1;`
                 const skillValues = [args.skillNames[i].toLowerCase()]
-                var foundSkill = await db.query(skillQuery, skillValues)
+                var foundSkill = await (await db.query(skillQuery, skillValues)).rows[0]
 
                 // If skill does not exist, add skill
                 if(foundSkill.rowCount == 0){
-                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                    const insertSkillQuery = `INSERT INTO post_skills (name) VALUES ($1) RETURNING *;`
                     const insertSkillValues = [skillValues]
                     foundSkill = await db.query(insertSkillQuery, insertSkillValues)
                 }
+                else
+                {
+                    // Increment uses
+                    const updateUsesQuery = `UPDATE post_skills SET uses = uses + 1 WHERE _id = $1;`
+                    const updateUsesValues = [foundSkill._id]
+                    await db.query(updateUsesQuery, updateUsesValues)
+                }
 
-                // Increment uses
-                /*const updateUsesQuery = `UPDATE skills SET uses = uses + 1 WHERE _id = $1;`
-                const updateUsesValues = [foundSkill.rows[0]._id]
-                await db.query(updateUsesQuery, updateUsesValues)*/
+                
 
                 const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
                 const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.neededSkills[i], args.filledSkills[i]];
