@@ -82,7 +82,26 @@ async function populatePostById(id){
             const usernames = (await db.query(teamQuery, teamValues)).rows
             return [...(usernames.map(user => user.username))]
         }
-    });    
+    });
+
+    Object.defineProperty(post, 'imageLinks', {
+        get: async function () {
+            const imageLinksQuery = `SELECT type FROM imageLinks WHERE post_image_link_id=$1;`
+            const imageLinksValues = [post._id]
+            const imageLinks = (await db.query(teamQuery, teamValues)).rows
+            return [...(imageLinks)]
+        }
+    });
+
+    Object.defineProperty(post, 'referenceLinks', {
+        get: async function () {
+            const referenceLinksQuery = `SELECT type FROM referenceLinks WHERE post_reference_link_id=$1;`
+            const referenceLinksValues = [post._id]
+            const referenceLinks = (await db.query(teamQuery, teamValues)).rows
+            return [...(referenceLinks)]
+        }
+    });
+
     return post
 }
 

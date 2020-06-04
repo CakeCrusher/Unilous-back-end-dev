@@ -195,7 +195,7 @@ module.exports = {
             if (!context.currentUser) {
                 throw new AuthenticationError('not authenticated')
             }
-            const addSavedPostQuery =  `INSERT INTO user_saved_posts (user_id, post_id) VALUES ($1, $2) RETURNING *;`
+            const addSavedPostQuery =  `INSERT INTO user_saved_posts (user_id, post_id) VALUES ($1, $2);`
             const addSavedPostValues = [args.user, args.postId]
             await db.query(addSavedPostQuery, addSavedPostValues)
             return await populateUserById(args.user)
@@ -205,8 +205,8 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
 
-            const query = `DELETE FROM user_posts WHERE _id=$1, is_saved=true RETURNING *;`
-            const values = [args.postId]
+            const query = `DELETE FROM user_posts WHERE _id=$1 AND user_id=$2 is_saved=true RETURNING _id;`
+            const values = [args.postId, args.user]
             const result = await db.query(query, values)
             return result.args.length > 0 ? 'post removed from saved posts' : 'post was not removed'
         },
