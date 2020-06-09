@@ -195,8 +195,8 @@ module.exports = {
             if (!context.currentUser) {
                 throw new AuthenticationError('not authenticated')
             }
-            const addSavedPostQuery =  `INSERT INTO user_saved_posts (user_id, post_id) VALUES ($1, $2);`
-            const addSavedPostValues = [args.user, args.postId]
+            const addSavedPostQuery =  `UPDATE user_posts SET is_saved = true WHERE _id=$1 AND user_id=$2;`
+            const addSavedPostValues = [args.postId, args.user]
             await db.query(addSavedPostQuery, addSavedPostValues)
             return await populateUserById(args.user)
          },
@@ -205,10 +205,10 @@ module.exports = {
                 throw new AuthenticationError('not authenticated')
             }
 
-            const query = `DELETE FROM user_posts WHERE _id=$1 AND user_id=$2 is_saved=true RETURNING _id;`
+            const query = `UPDATE user_posts SET is_saved = false WHERE _id=$1 AND user_id=$2 AND is_saved=true;`
             const values = [args.postId, args.user]
             const result = await db.query(query, values)
-            return result.args.length > 0 ? 'post removed from saved posts' : 'post was not removed'
+            return result.rowCount > 0 ? 'post removed from saved posts' : 'post was not removed'
         },
         login: async (root, args) => {
             const query = `SELECT * FROM user_account WHERE username=$1`
@@ -256,14 +256,14 @@ module.exports = {
             
             for(var i = 0; i < args.skillNames.length; i++) {
                 // Get skill if it exists
-                const skillQuery = `SELECT _id FROM post_skills WHERE name=$1;`
+                const skillQuery = `SELECT _id FROM skills WHERE name=$1;`
                 const skillValues = [args.skillNames[i].toLowerCase()]
-                var foundSkill = await (await db.query(skillQuery, skillValues)).rows[0]
+                var foundSkill = await db.query(skillQuery, skillValues)
 
                 // If skill does not exist, add skill
                 if(foundSkill.rowCount == 0){
-                    const insertSkillQuery = `INSERT INTO post_skills (name) VALUES ($1) RETURNING *;`
-                    const insertSkillValues = [skillValues]
+                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                    const insertSkillValues = skillValues
                     foundSkill = await db.query(insertSkillQuery, insertSkillValues)
                 }
                 else
