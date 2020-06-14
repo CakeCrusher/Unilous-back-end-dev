@@ -92,7 +92,12 @@ async function populatePostById(id){
             const imageLinksQuery = `SELECT type FROM imageLinks WHERE post_image_link_id=$1;`
             const imageLinksValues = [post._id]
             const imageLinks = (await db.query(imageLinksQuery, imageLinksValues)).rows
-            return [...(imageLinks)]
+            const resultArray = []
+            for (let index = 0; index < imageLinks.length; index++) {
+                const element = imageLinks[index];
+                resultArray.push(element.type)
+            }
+            return resultArray
         }
     });
 
@@ -101,7 +106,12 @@ async function populatePostById(id){
             const referenceLinksQuery = `SELECT type FROM referenceLinks WHERE post_reference_link_id=$1;`
             const referenceLinksValues = [post._id]
             const referenceLinks = (await db.query(referenceLinksQuery, referenceLinksValues)).rows
-            return [...(referenceLinks)]
+            const resultArray = []
+            for (let index = 0; index < referenceLinks.length; index++) {
+                const element = referenceLinks[index];
+                resultArray.push(element.type)
+            }
+            return resultArray
         }
     });
 
