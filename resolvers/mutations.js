@@ -227,9 +227,9 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             try {
                 await db.query('BEGIN')
