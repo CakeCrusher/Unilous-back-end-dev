@@ -159,6 +159,13 @@ module.exports = {
             const result = await db.query(userQuery)
             return result.rows.map(async user => populateUserById(user._id))
         },
+        someUsers: async (root, args) => {
+            const userQuery = `SELECT _id FROM user_account;`
+
+            const result = await db.query(userQuery)
+            const allUsers =  await Promise.all(result.rows.map(async user => populateUserById(user._id)))
+            return allUsers.slice(args.skip, args.skip + args.first)
+        },
         allPosts: async (root, args) => {
             const query = `SELECT _id FROM user_posts;`
     

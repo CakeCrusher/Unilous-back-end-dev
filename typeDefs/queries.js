@@ -22,6 +22,10 @@ type Query {
         username: String!
     ): User!
     allUsers: [User!]
+    someUsers(
+        skip: Int!
+        first: Int!
+    ): [User!]
     allPosts: [Post!]
     allSkills: [Skill!]
     skillSearch(
