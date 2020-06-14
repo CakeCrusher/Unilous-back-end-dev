@@ -227,61 +227,59 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
             try {
+                await db.query('BEGIN')
 
-            await db.query('BEGIN')
-
-            const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *;`
-            const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
-            const post = (await db.query(postQuery, postValues)).rows[0]
-            
-            if(args.imageLinks != null){
-                for (let imageLink of args.imageLinks) {
-                    await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,
-                    [imageLink, args.user, post._id]);
-                }
-            }
-
-            if(args.referenceLinks != null){
-                for (let referenceLink of args.referenceLinks) {
-                    await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,
-                    [referenceLink, args.user, post._id]);
-                }
-            }
-            
-            for(var i = 0; i < args.skillNames.length; i++) {
-                // Get skill if it exists
-                const skillQuery = `SELECT _id FROM skills WHERE name=$1;`
-                const skillValues = [args.skillNames[i].toLowerCase()]
-                var foundSkill = await db.query(skillQuery, skillValues)
-
-                // If skill does not exist, add skill
-                if(foundSkill.rowCount == 0){
-                    const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
-                    const insertSkillValues = skillValues
-                    foundSkill = await db.query(insertSkillQuery, insertSkillValues)
-                }
-                else
-                {
-                    // Increment uses
-                    const updateUsesQuery = `UPDATE post_skills SET uses = uses + 1 WHERE _id = $1;`
-                    const updateUsesValues = [foundSkill._id]
-                    await db.query(updateUsesQuery, updateUsesValues)
-                }
-
+                const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *;`
+                const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
+                const post = (await db.query(postQuery, postValues)).rows[0]
                 
+                if(args.imageLinks != null){
+                    for (let imageLink of args.imageLinks) {
+                        await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,
+                        [imageLink, args.user, post._id]);
+                    }
+                }
 
-                const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
-                const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.neededSkills[i], args.filledSkills[i]];
-                await db.query(insertPostSkillQuery, insertPostSkillValues)
-            }
+                if(args.referenceLinks != null){
+                    for (let referenceLink of args.referenceLinks) {
+                        await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,
+                        [referenceLink, args.user, post._id]);
+                    }
+                }
+                
+                for(var i = 0; i < args.skillNames.length; i++) {
+                    // Get skill if it exists
+                    const skillQuery = `SELECT _id FROM skills WHERE name=$1;`
+                    const skillValues = [args.skillNames[i].toLowerCase()]
+                    var foundSkill = await db.query(skillQuery, skillValues)
 
-            await db.query('COMMIT')
-            return await populatePostById(post._id)
+                    // If skill does not exist, add skill
+                    if(foundSkill.rowCount == 0){
+                        const insertSkillQuery = `INSERT INTO skills (name) VALUES ($1) RETURNING *;`
+                        const insertSkillValues = skillValues
+                        foundSkill = await db.query(insertSkillQuery, insertSkillValues)
+                    }
+                    else
+                    {
+                        // Increment uses
+                        const updateUsesQuery = `UPDATE skills SET uses = uses + 1 WHERE _id = $1;`
+                        const updateUsesValues = [foundSkill._id]
+                        await db.query(updateUsesQuery, updateUsesValues)
+                    }
+
+                    
+
+                    const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
+                    const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.skillCapacities[i], args.skillFills[i]];
+                    await db.query(insertPostSkillQuery, insertPostSkillValues)
+                }
+                await db.query('COMMIT')
+                return await populatePostById(post._id)
                 
             } catch (error) {
                 await db.query('ROLLBACK')

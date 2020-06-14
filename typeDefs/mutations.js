@@ -61,8 +61,8 @@ type Mutation {
         user: ID!
         contactLink: String!
         skillNames: [String!]!
-        neededSkills: [Int!]!
-        filledSkills: [Int!]!
+        skillCapacities: [Int!]!
+        skillFills: [Int!]!
         description: String!
         color: String!
         imageLinks: [String!]
