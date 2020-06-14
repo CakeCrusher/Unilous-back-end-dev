@@ -9,6 +9,7 @@ const mutationResolvers = require("./resolvers/mutations");
 const queryResolvers = require("./resolvers/queries");
 
 const { gql, ApolloServer } = require("apollo-server-express");
+const { populateUserById } = require('./data_models')
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const JWT_SECRET = process.env.JWT_SECRET;
