@@ -32,7 +32,8 @@ async function populateUserById(id) {
             const userPostsQuery = `SELECT _id FROM user_posts WHERE user_id=$1;`
             const userPostsValues = [user._id]
             const userPostsResult = await db.query(userPostsQuery, userPostsValues)
-            return [...(userPostsResult.rows)].map(async post => populatePostById(post._id));
+            let result = await Promise.all(userPostsResult.rows.map(async post => populatePostById(post._id)));
+            return [...(result)];
         }
     });
 
@@ -41,7 +42,8 @@ async function populateUserById(id) {
             const userSavedPostsQuery = `SELECT _id FROM user_saved_posts WHERE user_id=$1;`
             const userSavedPostsValues = [user._id]
             const userSavedPostsResult = await db.query(userSavedPostsQuery, userSavedPostsValues)
-            return [...(userSavedPostsResult.rows)].map(async post => populatePostById(post._id));
+            let result = await Promise.all(userSavedPostsResult.rows.map(async post => populatePostById(post._id)));
+            return [...(result)];
         }
     });
 
@@ -50,7 +52,8 @@ async function populateUserById(id) {
             const notificationsQuery = `SELECT _id FROM notification WHERE userto_id=$1;`
             const notificationsValues = [user._id]
             const notificationsResult = await db.query(notificationsQuery, notificationsValues)
-            return [...(notificationsResult.rows)].map(async notification => await populateNotificationById(notification._id));
+            let result = await Promise.all(notificationsResult.rows.map(async notification => populateNotificationById(notification._id)));
+            return [...(result)];
         }
     });
     return user
@@ -77,10 +80,10 @@ async function populatePostById(id){
 
     Object.defineProperty(post, 'team', {
         get: async function () {
-            const teamQuery = `SELECT username FROM user_account P INNER JOIN team C ON C.user_id = P._id WHERE C.user_id=$1;`
+            const teamQuery = `SELECT _id FROM teams WHERE user_id=$1;`
             const teamValues = [post._id]
-            const usernames = (await db.query(teamQuery, teamValues)).rows
-            return [...(usernames.map(user => user.username))]
+            const team = (await db.query(teamQuery, teamValues)).rows
+            return [...(team.map(user => populateUserById(user).username))]
         }
     });
 
@@ -88,7 +91,7 @@ async function populatePostById(id){
         get: async function () {
             const imageLinksQuery = `SELECT type FROM imageLinks WHERE post_image_link_id=$1;`
             const imageLinksValues = [post._id]
-            const imageLinks = (await db.query(teamQuery, teamValues)).rows
+            const imageLinks = (await db.query(imageLinksQuery, imageLinksValues)).rows
             return [...(imageLinks)]
         }
     });
@@ -97,7 +100,7 @@ async function populatePostById(id){
         get: async function () {
             const referenceLinksQuery = `SELECT type FROM referenceLinks WHERE post_reference_link_id=$1;`
             const referenceLinksValues = [post._id]
-            const referenceLinks = (await db.query(teamQuery, teamValues)).rows
+            const referenceLinks = (await db.query(referenceLinksQuery, referenceLinksValues)).rows
             return [...(referenceLinks)]
         }
     });
@@ -122,7 +125,7 @@ async function populateNotificationById(id){
     notification.post = null
     if(notification.post_id) {
         notification.post = await populatePostById(notification.post_id)
-    }    
+    }
     return notification
 }
 

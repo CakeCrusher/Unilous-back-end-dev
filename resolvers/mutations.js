@@ -81,10 +81,9 @@ module.exports = {
                         await db.query(updateSkillQuery, updateSkillValues)
                     }
 
-                    // TODO add back team
-                    // const teamUpdateQuery = `INSERT INTO team (user_id) VALUES ($1) RETURNING *;`
-                    // const teamUpdateValues = [notification.userfrom_id]
-                    // await db.query(teamUpdateQuery, teamUpdateValues)
+                    const teamUpdateQuery = `INSERT INTO team (user_id, post_id) VALUES ($1, $2) RETURNING *;`
+                    const teamUpdateValues = [notification.userfrom_id, notification.post_id]
+                    await db.query(teamUpdateQuery, teamUpdateValues)
                 }
                 await db.query('COMMIT')
                 return await populateNotificationById(args.notificationId);
