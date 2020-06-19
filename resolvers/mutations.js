@@ -227,30 +227,23 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
             try {
                 await db.query('BEGIN')
 
-                const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, description, color) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING *;`
-                const postValues = [args.user, args.title, args.contactLink, args.description, args.color]
+                const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, color) VALUES ($1, $2, $3, NOW(), $4) RETURNING *;`
+                const postValues = [args.user, args.title, args.contactLink, args.color]
                 const post = (await db.query(postQuery, postValues)).rows[0]
-                
-                if(args.imageLinks != null){
-                    for (let imageLink of args.imageLinks) {
-                        await db.query(`INSERT INTO imageLinks (type, user_id, post_image_link_id )  VALUES($1, $2, $3)`,
-                        [imageLink, args.user, post._id]);
-                    }
-                }
 
-                if(args.referenceLinks != null){
-                    for (let referenceLink of args.referenceLinks) {
-                        await db.query(`INSERT INTO referenceLinks (type, user_id, post_reference_link_id )  VALUES($1, $2, $3)`,
-                        [referenceLink, args.user, post._id]);
-                    }
-                }
+                const contentQuery = `INSERT INTO post_content (post_id, index, type, content) VALUES ($1, $2, $3, $4)`
+
+                await Promise.all(args.content_types.map(async function(element, i) {
+                    const contentValues = [post._id, i, element, args.content_data[i]]
+                    await db.query(contentQuery, contentValues)
+                }));
                 
                 for(var i = 0; i < args.skillNames.length; i++) {
                     // Get skill if it exists
@@ -271,8 +264,6 @@ module.exports = {
                         const updateUsesValues = [foundSkill._id]
                         await db.query(updateUsesQuery, updateUsesValues)
                     }
-
-                    
 
                     const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
                     const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.skillCapacities[i], args.skillFills[i]];

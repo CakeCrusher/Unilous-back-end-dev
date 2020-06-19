@@ -5,6 +5,7 @@ const modelTypeDefs = require("./typeDefs/models");
 const mutationTypeDefs = require("./typeDefs/mutations");
 const queryTypeDefs = require("./typeDefs/queries");
 
+const abstractionResolvers = require("./resolvers/abstraction");
 const mutationResolvers = require("./resolvers/mutations");
 const queryResolvers = require("./resolvers/queries");
 
@@ -27,6 +28,7 @@ const typeDefs = gql`
 `;
 
 const resolvers = {
+  ...abstractionResolvers,
   ...mutationResolvers,
   ...queryResolvers,
 };
