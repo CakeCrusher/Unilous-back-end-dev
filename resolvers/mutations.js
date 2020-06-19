@@ -227,9 +227,9 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            // if (!context.currentUser) {
-            //     throw new AuthenticationError('not authenticated')
-            // }
+            if (!context.currentUser) {
+                throw new AuthenticationError('not authenticated')
+            }
 
             try {
                 await db.query('BEGIN')
@@ -283,6 +283,11 @@ module.exports = {
             if (!context.currentUser) {
                 throw new AuthenticationError('not authenticated')
             }
+
+            if (context.currentUser._id == args.user_id) {
+                throw new AuthenticationError('user does not own post')
+            }
+
             const query = `DELETE FROM user_posts WHERE _id=$1;`
             const values = [args.postId]
             await db.query(query, values)
