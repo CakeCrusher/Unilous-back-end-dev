@@ -90,10 +90,11 @@ async function populatePostById(id){
 
     Object.defineProperty(post, 'content', {
         get: async function () {
-            const teamQuery = `SELECT _id FROM teams WHERE post_id=$1;`
+            const teamQuery = `SELECT _id FROM post_content WHERE post_id=$1;`
             const teamValues = [post._id]
             const contentResult = (await db.query(teamQuery, teamValues)).rows
-            return [...(contentResult.map(content => populateContentById(content._id)))]
+            const content = await Promise.all(contentResult.map(content => populateContentById(content._id)))
+            return [...content]
         }
     });
 
@@ -105,6 +106,12 @@ async function populateContentById(id){
     const values = [id]
     const content = (await db.query(query, values)).rows[0]
 
+    Object.defineProperty(content, 'post', {
+        get: async function () {
+            return populatePostById(content.post_id);
+        }
+    });
+
     if (content.type === 'text'){
         content.text = content.content
     }
@@ -113,6 +120,7 @@ async function populateContentById(id){
     }
     delete content.content
     delete content.type
+    delete content.post_id
     return content
 }
 

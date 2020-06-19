@@ -3,10 +3,12 @@ type Post
 {
   _id: ID!
   title: String!
-  user: ID!
+  user: User!
   skillNames: [String!]!
   skillCapacities: [Int!]!
   skillFills: [Int!]!
+  team: [String!]
+  time: String!
   content: [Content!]!
   color: String!
 }
@@ -14,20 +16,20 @@ type Post
 interface Content
 {
   _id:ID!
-  postId:ID!
+  post:Post!
 }
 
 type ContentText implements Content
 {
   _id:ID!
-  postId:ID!
-  text: String!
+  post:Post!
+  text:String!
 }
 
 type ContentImage implements Content
 {
   _id:ID!
-  postId:ID!
+  post:Post!
   image: String!
 }
 `
