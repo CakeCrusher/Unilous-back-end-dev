@@ -63,10 +63,9 @@ type Mutation {
         skillNames: [String!]!
         skillCapacities: [Int!]!
         skillFills: [Int!]!
-        description: String!
+        content_types: [String!]!,
+        content_data: [String!]!,
         color: String!
-        imageLinks: [String!]
-        referenceLinks: [String!]
     ): Post!
     deletePost(
         postId: ID!

@@ -80,42 +80,48 @@ async function populatePostById(id){
 
     Object.defineProperty(post, 'team', {
         get: async function () {
-            const teamQuery = `SELECT _id FROM teams WHERE user_id=$1;`
+            // TODO requires fix
+            const teamQuery = `SELECT _id FROM teams WHERE post_id=$1;`
             const teamValues = [post._id]
             const team = (await db.query(teamQuery, teamValues)).rows
             return [...(team.map(user => populateUserById(user).username))]
         }
     });
 
-    Object.defineProperty(post, 'imageLinks', {
+    Object.defineProperty(post, 'content', {
         get: async function () {
-            const imageLinksQuery = `SELECT type FROM imageLinks WHERE post_image_link_id=$1;`
-            const imageLinksValues = [post._id]
-            const imageLinks = (await db.query(imageLinksQuery, imageLinksValues)).rows
-            const resultArray = []
-            for (let index = 0; index < imageLinks.length; index++) {
-                const element = imageLinks[index];
-                resultArray.push(element.type)
-            }
-            return resultArray
-        }
-    });
-
-    Object.defineProperty(post, 'referenceLinks', {
-        get: async function () {
-            const referenceLinksQuery = `SELECT type FROM referenceLinks WHERE post_reference_link_id=$1;`
-            const referenceLinksValues = [post._id]
-            const referenceLinks = (await db.query(referenceLinksQuery, referenceLinksValues)).rows
-            const resultArray = []
-            for (let index = 0; index < referenceLinks.length; index++) {
-                const element = referenceLinks[index];
-                resultArray.push(element.type)
-            }
-            return resultArray
+            const teamQuery = `SELECT _id FROM post_content WHERE post_id=$1;`
+            const teamValues = [post._id]
+            const contentResult = (await db.query(teamQuery, teamValues)).rows
+            const content = await Promise.all(contentResult.map(content => populateContentById(content._id)))
+            return [...content]
         }
     });
 
     return post
+}
+
+async function populateContentById(id){
+    const query = `SELECT * FROM post_content WHERE _id=$1`
+    const values = [id]
+    const content = (await db.query(query, values)).rows[0]
+
+    Object.defineProperty(content, 'post', {
+        get: async function () {
+            return populatePostById(content.post_id);
+        }
+    });
+
+    if (content.type === 'text'){
+        content.text = content.content
+    }
+    else if (content.type === 'image'){
+        content.image = content.content
+    }
+    delete content.content
+    delete content.type
+    delete content.post_id
+    return content
 }
 
 async function populateSkillById(id){
