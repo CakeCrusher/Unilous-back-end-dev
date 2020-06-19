@@ -1,8 +1,8 @@
 var assert = require('assert');
-var db = require("./test_db");
-var fs = require('fs');
+//var db = require("./test_db");
+//var fs = require('fs');
 
-var sql = fs.readFileSync('init_database.sql').toString();
+//var sql = fs.readFileSync('init_database.sql').toString();
 
 describe('mutations', function () {
   describe('#indexOf()', function () {
@@ -20,12 +20,12 @@ describe('queries', function () {
 
     // runs before each test in this block
     beforeEach(function() {
-        db.query("BEGIN");
+        //db.query("BEGIN");
     });
 
     // runs after each test in this block
     afterEach(function() {
-        db.query("ROLLBACK");
+        //db.query("ROLLBACK");
     });
 
     describe('searchAwaitingNotifs', function () {
