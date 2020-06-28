@@ -227,16 +227,17 @@ module.exports = {
             return { value: jwt.sign(userForToken, JWT_SECRET) }
         },
         addPost: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
 
             try {
                 await db.query('BEGIN')
 
-                const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, color) VALUES ($1, $2, $3, NOW(), $4) RETURNING *;`
+                const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, color) VALUES ($1, $2, $3, NOW(), $4) RETURNING _id;`
                 const postValues = [args.user, args.title, args.contactLink, args.color]
-                const post = (await db.query(postQuery, postValues)).rows[0]
+                const postResult = await db.query(postQuery, postValues)
+                const post = await populatePostById(postResult.rows[0]._id)
 
                 const contentQuery = `INSERT INTO post_content (post_id, index, type, content) VALUES ($1, $2, $3, $4)`
 
@@ -265,9 +266,17 @@ module.exports = {
                         await db.query(updateUsesQuery, updateUsesValues)
                     }
 
-                    const insertPostSkillQuery = `INSERT INTO post_skills (skill_id, post_id, needed, filled) VALUES ($1, $2, $3, $4) RETURNING *;`
-                    const insertPostSkillValues = [foundSkill.rows[0]._id, post._id, args.skillCapacities[i], args.skillFills[i]];
-                    await db.query(insertPostSkillQuery, insertPostSkillValues)
+                    const insertSkillBucketQuery = `INSERT INTO skill_bucket (skill_id, skill_help_needed, post_id) VALUES ($1, $2, $3) RETURNING _id;`
+                    const insertSkillBucketValues = [foundSkill.rows[0]._id, args.skillCapacities[i], post._id];
+                    const skillBucket = (await db.query(insertSkillBucketQuery, insertSkillBucketValues)).rows[0]
+
+                    if(args.skillFills[i] > 0){
+                        const user_id = post.user._id
+
+                        const insertPostCollaboratorsQuery = `INSERT INTO post_collaborators (skill_bucket_id, user_id) VALUES ($1, $2) RETURNING _id;`
+                        const insertPostCollaboratorsValues= [skillBucket._id, user_id]
+                        await db.query(insertPostCollaboratorsQuery, insertPostCollaboratorsValues)
+                    }
                 }
                 await db.query('COMMIT')
                 return await populatePostById(post._id)

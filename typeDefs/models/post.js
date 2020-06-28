@@ -4,9 +4,7 @@ type Post
   _id: ID!
   title: String!
   user: User!
-  skillNames: [String!]!
-  skillCapacities: [Int!]!
-  skillFills: [Int!]!
+  skills: [SkillBucket!]!
   team: [String!]
   time: String!
   content: [Content!]!
