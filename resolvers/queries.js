@@ -11,6 +11,10 @@ module.exports = {
         me: (root, args, context) => {
             return context.currentUser
         },
+        userNotifications: async (root, args, context) => {
+            const user = await populateUserById(args.user)
+            return user.notifications
+        },
         searchAnsweredQToPost: async (root, args, context) => {
             const query = `SELECT _id FROM user_posts WHERE title=$1;`
             const values = [args.title]
