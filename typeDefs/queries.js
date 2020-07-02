@@ -1,9 +1,6 @@
 module.exports = `
 type Query {
     me: User
-    searchAwaitingNotifs(
-        userId: ID!
-    ): Int!
     searchAnsweredQToPost(
         title: String!
     ): [Notification!]
@@ -32,8 +29,8 @@ type Query {
         filter: String!
     ): [Skill!]
     allNotifications: [Notification!]
-    listOfNotifications(
-        notifications: [ID!]
+    userNotifications(
+        user: ID!
     ): [Notification!]
 }
 `

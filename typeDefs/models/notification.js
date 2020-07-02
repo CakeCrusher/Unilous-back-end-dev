@@ -1,12 +1,30 @@
 module.exports = `
-type Notification {
+interface Notification {
     _id: ID!
-    userFrom: User!
-    userTo: User!
-    message: String
-    post: Post
-    proposedContribution: [Int!]
-    question: String
-    answer: String
-    accepted: Boolean
-}`
+    user_from: User!
+    link: String!
+    date: String!
+    read: Boolean!
+    post: Post!
+}
+
+type QuestionNotification implements Notification {
+    _id: ID!
+    user_from: User!
+    link: String!
+    date: String!
+    read: Boolean!
+    post: Post!
+    question: String!
+}
+type JoinRequestNotification implements Notification {
+    _id: ID!
+    user_from: User!
+    link: String!
+    date: String!
+    read: Boolean!
+    post: Post!
+    skill_joining: Skill!
+    message: String!
+}
+`

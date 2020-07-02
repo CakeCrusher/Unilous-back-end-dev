@@ -162,6 +162,11 @@ async function populateSkillBucketById(id){
     });
 
     return skillBucket
+ }
+
+const NotificationTypes = {
+    Question:    1,
+    JoinRequest: 2,
 }
 
 async function populateNotificationById(id){
@@ -169,8 +174,25 @@ async function populateNotificationById(id){
     const values = [id]
     const notification = (await db.query(query, values)).rows[0]
 
-    notification.userFrom = await populateUserById(notification.userfrom_id)
-    notification.userTo = await populateUserById(notification.userto_id)
+    switch(notification.type)
+    {
+        case NotificationTypes.Question:
+            const notificationQuestionQuery = `SELECT question FROM notification_question WHERE notification_id=$1;`
+            const notificationQuestionValues = [notification._id]
+            notification.question = (await db.query(notificationQuestionQuery, notificationQuestionValues)).rows[0].question
+            break;
+        case NotificationTypes.JoinRequest:
+            const notificationJoinRequestQuery = `SELECT skill_id, message FROM notification_join_request WHERE notification_id=$1;`
+            const notificationJoinRequestValues = [notification._id]
+            const notificationJoinRequest = (await db.query(notificationJoinRequestQuery, notificationJoinRequestValues)).rows[0]
+            notification.skill_joining = populateSkillById(notificationJoinRequest.skill_id)
+            notification.message = notificationJoinRequest.message
+            break;
+        default:
+            throw new Error('Invalid notification type.')
+    }
+
+    notification.user_from = await populateUserById(notification.userfrom_id)
     notification.post = null
     if(notification.post_id) {
         notification.post = await populatePostById(notification.post_id)
@@ -178,7 +200,8 @@ async function populateNotificationById(id){
     return notification
 }
 
-module.exports.populateUserById = populateUserById;
+module.exports.populateUserById = populateUserById
 module.exports.populateNotificationById = populateNotificationById
 module.exports.populatePostById = populatePostById
 module.exports.populateSkillById = populateSkillById
+module.exports.NotificationTypes = NotificationTypes

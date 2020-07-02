@@ -8,31 +8,12 @@ const { populateUserById, populatePostById, populateNotificationById } = require
 
 module.exports = {
     Query: {
-        searchAwaitingNotifs: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
-            
-            const userQuery = `SELECT username FROM user_account WHERE _id=$1;`
-            const userValues = [args.userId]
-            const user = (await db.query(userQuery, userValues)).rows[0]
-
-            const notificationQuery = `SELECT _id FROM notification WHERE userto_id=$1;`
-            const notificationValues = [args.userId]
-            const notifications = await Promise.all((await db.query(notificationQuery, notificationValues)).rows
-                .map(async notification => populateNotificationById(notification._id)))
-
-            let numPendingNotifications = 0
-
-            for (const notification of notifications) {
-                if (notification && notification.userFrom.username !== user.username && (/* notification.proposedContribution.length */ true || notification.question) && notification.accepted === null && notification.answer === null) {
-                    numPendingNotifications++
-                }
-            }
-            return numPendingNotifications
-        },
         me: (root, args, context) => {
             return context.currentUser
+        },
+        userNotifications: async (root, args, context) => {
+            const user = await populateUserById(args.user)
+            return user.notifications
         },
         searchAnsweredQToPost: async (root, args, context) => {
             const query = `SELECT _id FROM user_posts WHERE title=$1;`
@@ -190,15 +171,5 @@ module.exports = {
             const result = await db.query(query)
             return result.rows.map(async notification => populateNotificationById(notification._id))
         },
-        listOfNotifications: async (root, args) => {
-            const params = []
-            for(var i = 1; i <= args.notifications.length; i++) {
-                params.push('$' + i);
-            }
-
-            const query = 'SELECT _id FROM notification WHERE _id IN (' + params.join(',') + ')'
-            const result = await db.query(query, args.notifications)
-            return result.rows.map(async notification => populateNotificationById(notification._id))
-        }
     }
 }

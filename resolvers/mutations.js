@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
 
-const { populateUserById, populatePostById, populateNotificationById } = require('../data_models')
+const { populateUserById, populatePostById, populateNotificationById, NotificationTypes } = require('../data_models')
 
 module.exports = {
     Mutation: {
@@ -34,29 +34,63 @@ module.exports = {
             await db.query(query, values);
             return await populateNotificationById(args.notificationId)
         },
-        makeNotification: async (root, args, context) => {
-            if (!context.currentUser) {
-                throw new AuthenticationError('not authenticated')
-            }
 
-            const postQuery = `SELECT * FROM user_posts WHERE _id = $1;`
-            const postValues = [args.postId]
-            const post = (await db.query(postQuery, postValues)).rows
+        // user_for: User!
+        // user_from: User!
+        // type: String!
+        // link: String!
+        // question: String
+        // skill_joining: Skill
+        // message: String
+        // post: ID
+        createNotification: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            try {
+                await db.query('BEGIN')
+            
+                const createNotificationQuery = `INSERT INTO notification (userto_id, userfrom_id, post_id, date, link, type) VALUES ($1, $2, $3, NOW(), $4, $5) RETURNING _id;`
+                let createNotificationValues
+                let notification
 
-            var newNotification;
-            if(post.length > 0)
-            {
-                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, post_id, message) VALUES ($1, $2, $3, $4) RETURNING _id;`
-                const createNotificationValues = [args.userFromId, args.userToId, args.postId, args.message]
-                newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+                if(args.question) {
+                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, NotificationTypes.Question]
+                    notification = await (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+
+                    const insertNotificationQuestionQuery = `INSERT INTO notification_question (notification_id, question) VALUES ($1, $2);`
+                    const insertNotificationQuestionValues = [notification._id, args.question]
+                    await db.query(insertNotificationQuestionQuery, insertNotificationQuestionValues)
+                }
+                else if(args.skill_joining && args.message){
+                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, NotificationTypes.JoinRequest]
+                    notification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+
+                    const insertNotificationJoinRequestQuery = `INSERT INTO notification_join_request (notification_id, skill_id, message) VALUES ($1, $2, $3);`
+                    const insertNotificationJoinRequestValues = [notification._id, args.skill_joining, args.message]
+                    await db.query(insertNotificationJoinRequestQuery, insertNotificationJoinRequestValues)
+                }
+                else
+                {
+                    throw new Error(`Invalid type. Args require either (question) or (skill_joining and message) but got ${Object.keys(args).toString()}`)
+                }
+                await db.query('COMMIT')
+                return await populateNotificationById(notification._id)
             }
-            else
+            catch(e)
             {
-                const createNotificationQuery = `INSERT INTO notification (userfrom_id, userto_id, message) VALUES ($1, $2, $3) RETURNING _id;`
-                const createNotificationValues = [args.userFromId, args.userToId, args.message]
-                newNotification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
+                await db.query('ROLLBACK')
+                throw e
             }
-            return await populateNotificationById(newNotification._id)
+        },
+        readNotification: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const updateReadQuery = `UPDATE notification SET read=true WHERE _id=$1;`
+            const updateReadValues = [args.notification]
+            await db.query(updateReadQuery, updateReadValues)
+            return await populateNotificationById(args.notification)
         },
         acceptNotification: async (root, args, context) => {
             if (!context.currentUser) {
@@ -81,7 +115,7 @@ module.exports = {
                         await db.query(updateSkillQuery, updateSkillValues)
                     }
 
-                    const teamUpdateQuery = `INSERT INTO team (user_id, post_id) VALUES ($1, $2) RETURNING *;`
+                    const teamUpdateQuery = `INSERT INTO team (user_id, post_id) VALUES ($1, $2);`
                     const teamUpdateValues = [notification.userfrom_id, notification.post_id]
                     await db.query(teamUpdateQuery, teamUpdateValues)
                 }
