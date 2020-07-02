@@ -64,19 +64,28 @@ async function populatePostById(id){
     const values = [id]
     const post = (await db.query(query, values)).rows[0]
 
-    const skillQuery = `SELECT * FROM post_skills P INNER JOIN skills C ON C._id = P.skill_id WHERE P.post_id=$1;`
-    const skillValues = [post._id]
-    const skillsResult = (await db.query(skillQuery, skillValues)).rows
+    // const skillQuery = `SELECT * FROM post_skills P INNER JOIN skills C ON C._id = P.skill_id WHERE P.post_id=$1;`
+    // const skillValues = [post._id]
+    // const skillsResult = (await db.query(skillQuery, skillValues)).rows
 
-    post.skillNames = []
-    post.skillCapacities = []
-    post.skillFills = []
-    for(var i = 0; i < skillsResult.length; i++){
-        post.skillNames.push(skillsResult[i].name)
-        post.skillCapacities.push(skillsResult[i].needed)
-        post.skillFills.push(skillsResult[i].filled)
-    }
+    // post.skillNames = []
+    // post.skillCapacities = []
+    // post.skillFills = []
+    // for(var i = 0; i < skillsResult.length; i++){
+    //     post.skillNames.push(skillsResult[i].name)
+    //     post.skillCapacities.push(skillsResult[i].needed)
+    //     post.skillFills.push(skillsResult[i].filled)
+    // }
     post.user = await populateUserById(post.user_id)
+
+    Object.defineProperty(post, 'skills', {
+        get: async function () {
+            const skillBucketQuery = `SELECT _id FROM skill_bucket WHERE post_id=$1;`
+            const skillBucketValues = [post._id]
+            const skillBucket = (await db.query(skillBucketQuery, skillBucketValues)).rows
+            return [...(skillBucket.map(skillBucket => populateSkillBucketById(skillBucket._id)))]
+        }
+    });
 
     Object.defineProperty(post, 'team', {
         get: async function () {
