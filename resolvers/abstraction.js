@@ -12,4 +12,18 @@ module.exports = {
         return null;
       },
     },
+
+    Notification: {
+      __resolveType(notification, context, info){
+        if(notification.question){
+          return 'QuestionNotification';
+        }
+  
+        if(notification.skill_joining){
+          return 'JoinRequestNotification';
+        }
+  
+        return null;
+      },
+    },
   };

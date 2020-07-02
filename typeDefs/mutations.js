@@ -10,13 +10,18 @@ type Mutation {
         notificationId: ID!
         response: String!
     ): Notification
-    makeNotification(
-        userFromId: ID!
-        userToId: ID!
-        message: String!
-        postId: ID
-        proposedContribution: [Int!]
-    ): Notification
+    createNotification(
+        user_to: ID!
+        user_from: ID!
+        link: String!
+        question: String
+        skill_joining: ID
+        message: String
+        post: ID
+    ): Notification!
+    readNotification(
+        notification: ID!
+    ): Notification!
     acceptNotification(
         notificationId: ID!
     ): Notification
