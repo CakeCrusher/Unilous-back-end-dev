@@ -20,8 +20,14 @@ module.exports = {
         getPostJoinRequests: async (root, args, context) => {
             const query = `SELECT _id FROM join_requests WHERE post_id=$1;`
             const values = [args.post_id]
-            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new Post(joinRequest._id))
+            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
             return await Promise.all(joinRequests);
+        },
+        getUserPostQuestions: async (root, args, context) => {
+            const query = `SELECT _id FROM notification WHERE post_id=$1 AND userto_id=$2 AND type=$3;`
+            const values = [args.post_id, args.user_id, Notification.Types.Question]
+            const notifications = (await db.query(query, values)).rows.map(async notification => await new Notification(notification._id))
+            return await Promise.all(notifications);
         },
         searchPosts: async (root, args) => {
             const eventQuery = args.eventQuery

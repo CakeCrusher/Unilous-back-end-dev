@@ -90,8 +90,8 @@ module.exports = {
             // if (!context.currentUser) {
             //     throw new AuthenticationError('not authenticated')
             // }
-            const createJoinRequestQuery = `INSERT INTO join_request (date, user_to_id, user_from_id, post_id, skill_id, message) VALUES (NOW(), $1, $2, $3, $4, $5) RETURNING _id;`
-            const createJoinRequestValues = [args.user_to, args.user_from, args.post, args.skill_joining, args.message]
+            const createJoinRequestQuery = `INSERT INTO join_request (date, user_from_id, post_id, skill_id, message) VALUES (NOW(), $1, $2, $3, $4) RETURNING _id;`
+            const createJoinRequestValues = [args.user_from, args.post, args.skill_joining, args.message]
             const joinRequestID = (await db.query(createJoinRequestQuery, createJoinRequestValues)).rows[0]._id
             return await new JoinRequest(joinRequestID)
         },

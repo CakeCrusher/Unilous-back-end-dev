@@ -82,7 +82,6 @@ type Mutation {
         name: String!
     ): Skill!
     createJoinRequest(
-		user_to: ID!
         user_from: ID!
         post: ID!
         skill_joining: ID!
