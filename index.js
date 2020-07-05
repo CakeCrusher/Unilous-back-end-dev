@@ -10,7 +10,7 @@ const mutationResolvers = require("./resolvers/mutations");
 const queryResolvers = require("./resolvers/queries");
 
 const { gql, ApolloServer } = require("apollo-server-express");
-const { populateUserById } = require('./data_models')
+const User  = require('./data_models/User')
 const jwt = require("jsonwebtoken");
 const cors = require("cors");
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -46,7 +46,7 @@ const server = new ApolloServer({
         auth.substring(JWT_SECRET.length + 1),
         JWT_SECRET
       );
-      const currentUser = await populateUserById(token._id);
+      const currentUser = await new User(token._id);
       return { currentUser };
     } else {
       return { currentUser: null };

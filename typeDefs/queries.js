@@ -32,5 +32,8 @@ type Query {
     userNotifications(
         user: ID!
     ): [Notification!]
+    getPostJoinRequests(
+        post_id: ID!
+    ): [JoinRequest!]
 }
 `
