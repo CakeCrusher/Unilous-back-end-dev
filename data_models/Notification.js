@@ -1,6 +1,6 @@
 const db = require('../db')
 const DataClass = require('./DataClass')
-const Skill = require('./Skill')
+const SkillBucket = require('./Skill')
 const User = require('./User')
 const Post = require('./Post')
 
@@ -34,7 +34,7 @@ class Notification extends DataClass{
                     const notificationJoinRequestQuery = `SELECT skill_id, message FROM notification_join_request WHERE notification_id=$1;`
                     const notificationJoinRequestValues = [this._id]
                     const notificationJoinRequest = (await db.query(notificationJoinRequestQuery, notificationJoinRequestValues)).rows[0]
-                    this.skill_joining = await new Skill(notificationJoinRequest.skill_id)
+                    this.skill_joining = await new SkillBucket(notificationJoinRequest.skill_bucket_id)
                     this.message = notificationJoinRequest.message
                     break;
                 default:

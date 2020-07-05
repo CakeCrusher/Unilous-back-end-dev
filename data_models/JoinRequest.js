@@ -1,7 +1,7 @@
 const db = require('../db')
 const DataClass = require('./DataClass')
 const User = require('./User')
-const Skill = require('./Skill')
+const SkillBucket = require('./SkillBucket')
 const Post = require('./Post')
 
 class JoinRequest extends DataClass{
@@ -41,7 +41,7 @@ class JoinRequest extends DataClass{
 
         Object.defineProperty(this, 'skill_joining', {
             get: async function () {
-                return await new Skill(this._skill_id)
+                return await new SkillBucket(this._skill_id)
             }
         });
     }
