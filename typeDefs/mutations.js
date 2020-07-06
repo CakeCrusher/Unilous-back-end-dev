@@ -81,6 +81,32 @@ type Mutation {
     updateSkillUse(
         name: String!
     ): Skill!
-
+    createJoinRequest(
+        user_from: ID!
+        post: ID!
+        skill_joining: ID!
+        message: String!
+    ): JoinRequest!
+    acceptJoinRequest(
+        joinRequest_id: ID!
+        reason: String!
+    ): JoinRequest!
+    declineJoinRequest(
+        joinRequest_id: ID!
+        reason: String!
+    ): JoinRequest!
+    createQuestion(
+        user_from: ID! 
+        post_id: ID!
+        question: String!
+    ): Question!
+    acceptQuestion(
+        question_id: ID!
+        response: String!
+    ): Question!
+    declineQuestion(
+        question_id: ID!
+        response: String!
+    ): Question!
 }
 `

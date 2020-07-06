@@ -9,7 +9,11 @@ const JWT_SECRET = process.env.JWT_SECRET
 const { UserInputError, AuthenticationError } = require('apollo-server-express')
 const db = require("../db")
 
-const { populateUserById, populatePostById, populateNotificationById, NotificationTypes } = require('../data_models')
+const User = require('../data_models/User')
+const Post = require('../data_models/Post')
+const Notification = require('../data_models/Notification')
+const JoinRequest = require('../data_models/JoinRequest')
+const Question = require('../data_models/Question')
 
 module.exports = {
     Mutation: {
@@ -91,6 +95,33 @@ module.exports = {
             const updateReadValues = [args.notification]
             await db.query(updateReadQuery, updateReadValues)
             return await populateNotificationById(args.notification)
+        },
+        createQuestion: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const createJoinRequestQuery = `INSERT INTO question (date, user_from_id, post_id, question) VALUES (NOW(), $1, $2, $3) RETURNING _id;`
+            const createJoinRequestValues = [args.user_from, args.post_id, args.question]
+            const question = (await db.query(createJoinRequestQuery, createJoinRequestValues)).rows[0]
+            return await new Question(question._id)
+        },
+        acceptQuestion: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const updateJoinRequestQuery = `UPDATE question SET accepted=true, response=$2 WHERE _id=$1;`
+            const updateJoinRequestValues = [args.question_id, args.response]
+            await db.query(updateJoinRequestQuery, updateJoinRequestValues)
+            return await new Question(args.question_id)
+        },
+        declineQuestion: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const updateJoinRequestQuery = `UPDATE question SET accepted=false, response=$2 WHERE _id=$1;`
+            const updateJoinRequestValues = [args.question_id, args.response]
+            await db.query(updateJoinRequestQuery, updateJoinRequestValues)
+            return await new Question(args.question_id)
         },
         acceptNotification: async (root, args, context) => {
             if (!context.currentUser) {
