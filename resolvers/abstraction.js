@@ -9,7 +9,7 @@ module.exports = {
           return 'ContentImage';
         }
   
-        return null;
+        throw new Error('Content type cannot be resolved')
       },
     },
 
@@ -23,7 +23,7 @@ module.exports = {
           return 'JoinRequestNotification';
         }
   
-        return null;
+        throw new Error('Notification type cannot be resolved')
       },
     },
   };

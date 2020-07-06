@@ -26,7 +26,7 @@ module.exports = {
             const values = [args.userFromId, args.userToId, args.postId, args.question]
 
             const notification = (await db.query(query, values)).rows[0];
-            return await populateNotificationById(notification._id)
+            return await new Notification(notification._id)
         },
         answerQuestion: async (root, args, context) => {
             if (!context.currentUser) {
@@ -36,17 +36,8 @@ module.exports = {
             const query = `UPDATE notification SET answer=$1, accepted=$2 WHERE _id=$3;`
             const values = [args.response, true, args.notificationId]
             await db.query(query, values);
-            return await populateNotificationById(args.notificationId)
+            return await new Notification(args.notificationId)
         },
-
-        // user_for: User!
-        // user_from: User!
-        // type: String!
-        // link: String!
-        // question: String
-        // skill_joining: Skill
-        // message: String
-        // post: ID
         createNotification: async (root, args, context) => {
             // if (!context.currentUser) {
             //     throw new AuthenticationError('not authenticated')
@@ -59,7 +50,7 @@ module.exports = {
                 let notification
 
                 if(args.question) {
-                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, NotificationTypes.Question]
+                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, Notification.Types.Question]
                     notification = await (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
 
                     const insertNotificationQuestionQuery = `INSERT INTO notification_question (notification_id, question) VALUES ($1, $2);`
@@ -67,7 +58,7 @@ module.exports = {
                     await db.query(insertNotificationQuestionQuery, insertNotificationQuestionValues)
                 }
                 else if(args.skill_joining && args.message){
-                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, NotificationTypes.JoinRequest]
+                    createNotificationValues = [args.user_to, args.user_from, args.post, args.link, Notification.Types.JoinRequest]
                     notification = (await db.query(createNotificationQuery, createNotificationValues)).rows[0]
 
                     const insertNotificationJoinRequestQuery = `INSERT INTO notification_join_request (notification_id, skill_id, message) VALUES ($1, $2, $3);`
@@ -79,7 +70,7 @@ module.exports = {
                     throw new Error(`Invalid type. Args require either (question) or (skill_joining and message) but got ${Object.keys(args).toString()}`)
                 }
                 await db.query('COMMIT')
-                return await populateNotificationById(notification._id)
+                return await new Notification(notification._id)
             }
             catch(e)
             {
@@ -94,7 +85,34 @@ module.exports = {
             const updateReadQuery = `UPDATE notification SET read=true WHERE _id=$1;`
             const updateReadValues = [args.notification]
             await db.query(updateReadQuery, updateReadValues)
-            return await populateNotificationById(args.notification)
+            return await new Notification(args.notification)
+        },
+        createJoinRequest: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const createJoinRequestQuery = `INSERT INTO join_request (date, user_from_id, post_id, skill_id, message) VALUES (NOW(), $1, $2, $3, $4) RETURNING _id;`
+            const createJoinRequestValues = [args.user_from, args.post, args.skill_joining, args.message]
+            const joinRequestID = (await db.query(createJoinRequestQuery, createJoinRequestValues)).rows[0]._id
+            return await new JoinRequest(joinRequestID)
+        },
+        acceptJoinRequest: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const updateJoinRequestQuery = `UPDATE join_request SET accepted=true, reason=$2 WHERE _id=$1;`
+            const updateJoinRequestValues = [args.joinRequest_id, args.reason]
+            await db.query(updateJoinRequestQuery, updateJoinRequestValues)
+            return await new JoinRequest(args.joinRequest_id)
+        },
+        declineJoinRequest: async (root, args, context) => {
+            // if (!context.currentUser) {
+            //     throw new AuthenticationError('not authenticated')
+            // }
+            const updateJoinRequestQuery = `UPDATE join_request SET accepted=false, reason=$2 WHERE _id=$1;`
+            const updateJoinRequestValues = [args.joinRequest_id, args.reason]
+            await db.query(updateJoinRequestQuery, updateJoinRequestValues)
+            return await new JoinRequest(args.joinRequest_id)
         },
         createQuestion: async (root, args, context) => {
             // if (!context.currentUser) {
@@ -151,7 +169,7 @@ module.exports = {
                     await db.query(teamUpdateQuery, teamUpdateValues)
                 }
                 await db.query('COMMIT')
-                return await populateNotificationById(args.notificationId);
+                return await new Notification(args.notificationId);
             }
             catch(e)
             {
@@ -167,7 +185,7 @@ module.exports = {
             const query = `UPDATE notification SET accepted=$1 WHERE _id=$2 RETURNING *;`
             const values = [false, args.notificationId]
             const notification = (await db.query(query, values)).rows[0];
-            return await populateNotificationById(notification._id);          
+            return await new Notification(notification._id);          
         },
         createUser: async (root, args) => {
             const saltRounds = 10
@@ -176,7 +194,7 @@ module.exports = {
             const values = [args.username, hashedPassword, args.referenceLink]
     
             const user = (await db.query(query, values)).rows[0];
-            return populateUserById(user._id)
+            return await new User(user._id)
         },
         addPrimarySkill: async (root, args) => {
             try {
@@ -208,7 +226,7 @@ module.exports = {
                 }
                 
                 await db.query('COMMIT')
-                return await populateUserById(args.user)
+                return await new User(args.user)
             } 
             catch(e)
             {
@@ -247,7 +265,7 @@ module.exports = {
                 }
                 
                 await db.query('COMMIT')
-                return await populateUserById(args.user)
+                return await new User(args.user)
             } 
             catch(e)
             {
@@ -262,7 +280,7 @@ module.exports = {
             const addSavedPostQuery =  `UPDATE user_posts SET is_saved = true WHERE _id=$1 AND user_id=$2;`
             const addSavedPostValues = [args.postId, args.user]
             await db.query(addSavedPostQuery, addSavedPostValues)
-            return await populateUserById(args.user)
+            return await new User(args.user)
          },
         removeSavedPost: async (root, args, context) => {
             if (!context.currentUser) {
@@ -302,7 +320,7 @@ module.exports = {
                 const postQuery = `INSERT INTO user_posts (user_id, title, contact_link, time, color) VALUES ($1, $2, $3, NOW(), $4) RETURNING _id;`
                 const postValues = [args.user, args.title, args.contactLink, args.color]
                 const postResult = await db.query(postQuery, postValues)
-                const post = await populatePostById(postResult.rows[0]._id)
+                const post = await new Notification(postResult.rows[0]._id)
 
                 const contentQuery = `INSERT INTO post_content (post_id, index, type, content) VALUES ($1, $2, $3, $4)`
 
@@ -344,7 +362,7 @@ module.exports = {
                     }
                 }
                 await db.query('COMMIT')
-                return await populatePostById(post._id)
+                return await new Post(post._id)
                 
             } catch (error) {
                 await db.query('ROLLBACK')
