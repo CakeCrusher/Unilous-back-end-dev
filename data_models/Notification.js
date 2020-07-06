@@ -1,7 +1,6 @@
 const db = require('../db')
 const DataClass = require('./DataClass')
 const SkillBucket = require('./Skill')
-const User = require('./User')
 const Post = require('./Post')
 
 class Notification extends DataClass{
@@ -18,6 +17,9 @@ class Notification extends DataClass{
             const values = [id]
             const db_notification = (await db.query(query, values)).rows[0]
 
+            this.link = db_notification.link
+            this.date = db_notification.date
+            this.read = db_notification.read
             this._user_from_id = db_notification.userfrom_id
             this._post_id = db_notification.post_id
             this._type = db_notification.type
@@ -48,6 +50,7 @@ class Notification extends DataClass{
     defineProperties(){
         Object.defineProperty(this, 'user_from', {
             get: async function () {
+                const User = require('./User')
                 return await new User(this._user_from_id)
             }
         });

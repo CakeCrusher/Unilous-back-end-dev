@@ -1,5 +1,7 @@
 const db = require('../db')
 const DataClass = require('./DataClass')
+const Post = require('./Post')
+const Notification = require('./Notification')
 
 class User extends DataClass{
     constructor(id) {
@@ -24,6 +26,7 @@ class User extends DataClass{
     defineProperties(){
         Object.defineProperty(this, 'interests', {
             get: async function () {
+                return []
                 throw new Error('Unimplemented')
             }
         });
@@ -52,7 +55,7 @@ class User extends DataClass{
                 const userPostsQuery = `SELECT _id FROM user_posts WHERE user_id=$1;`
                 const userPostsValues = [this._id]
                 const userPostsResult = await db.query(userPostsQuery, userPostsValues)
-                let result = await Promise.all(userPostsResult.rows.map(async post => populatePostById(post._id)));
+                let result = await Promise.all(userPostsResult.rows.map(async post => await new Post(post._id)));
                 return [...(result)];
             }
         });
@@ -62,7 +65,7 @@ class User extends DataClass{
                 const userSavedPostsQuery = `SELECT _id FROM user_saved_posts WHERE user_id=$1;`
                 const userSavedPostsValues = [this._id]
                 const userSavedPostsResult = await db.query(userSavedPostsQuery, userSavedPostsValues)
-                let result = await Promise.all(userSavedPostsResult.rows.map(async post => populatePostById(post._id)));
+                let result = await Promise.all(userSavedPostsResult.rows.map(async post => await new Post(post._id)));
                 return [...(result)];
             }
         });
@@ -72,7 +75,7 @@ class User extends DataClass{
                 const notificationsQuery = `SELECT _id FROM notification WHERE userto_id=$1;`
                 const notificationsValues = [this._id]
                 const notificationsResult = await db.query(notificationsQuery, notificationsValues)
-                let result = await Promise.all(notificationsResult.rows.map(async notification => populateNotificationById(notification._id)));
+                let result = await Promise.all(notificationsResult.rows.map(async notification => await new Notification(notification._id)));
                 return [...(result)];
             }
         });

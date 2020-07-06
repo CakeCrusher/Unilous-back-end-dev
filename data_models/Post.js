@@ -28,6 +28,7 @@ class Post extends DataClass{
     defineProperties(){
         Object.defineProperty(this, 'user', {
             get: async function () {
+                const User = require('./User')
                 return await new User(this._user_id)
             }
         });
@@ -44,11 +45,11 @@ class Post extends DataClass{
     
         Object.defineProperty(this, 'team', {
             get: async function () {
-                // TODO requires fix
+                const User = require('./User')
                 const teamQuery = `SELECT _id FROM teams WHERE post_id=$1;`
                 const teamValues = [post._id]
                 let team = (await db.query(teamQuery, teamValues)).rows
-                team = await Promise.all(team.map(user => new User(user).username))
+                team = await Promise.all(team.map(user => new User(user._id)).username)
                 return [...team]
             }
         });
