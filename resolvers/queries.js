@@ -7,6 +7,8 @@ const db = require("../db");
 const User = require('../data_models/User')
 const Post = require('../data_models/Post')
 const Notification = require('../data_models/Notification')
+const JoinRequest = require('../data_models/JoinRequest')
+const Question = require('../data_models/Question')
 
 module.exports = {
     Query: {
@@ -22,6 +24,12 @@ module.exports = {
             const values = [args.post_id]
             const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
             return await Promise.all(joinRequests);
+        },
+        getPostQuestions: async (root, args, context) => {
+            const query = `SELECT _id FROM question WHERE post_id=$1;`
+            const values = [args.post_id]
+            const questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
+            return await Promise.all(questions);
         },
         getUserPostQuestions: async (root, args, context) => {
             const query = `SELECT _id FROM notification WHERE post_id=$1 AND userto_id=$2 AND type=$3;`

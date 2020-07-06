@@ -18,7 +18,7 @@ class JoinRequest extends DataClass{
             this.date = db_question.date
             this.question = db_question.message
             this.accepted = db_question.accepted
-            this.response = db_question.reason
+            this.response = db_question.response
 
             this.defineProperties()
         });
