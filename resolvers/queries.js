@@ -4,7 +4,9 @@
 // const Skill = require('../models/skill')
 const { AuthenticationError } = require('apollo-server-express')
 const db = require("../db");
-const { populateUserById, populatePostById, populateNotificationById } = require('../data_models')
+const User = require('../data_models/User')
+const Post = require('../data_models/Post')
+const Notification = require('../data_models/Notification')
 
 module.exports = {
     Query: {
@@ -12,30 +14,20 @@ module.exports = {
             return context.currentUser
         },
         userNotifications: async (root, args, context) => {
-            const user = await populateUserById(args.user)
+            const user = await new User(args.user)
             return user.notifications
         },
-        searchAnsweredQToPost: async (root, args, context) => {
-            const query = `SELECT _id FROM user_posts WHERE title=$1;`
-            const values = [args.title]
-            const postId = (await db.query(query, values)).rows[0]._id
-            const post = await populatePostById(postId)
-
-            let correctNotifs = []
-            if(post != undefined) {
-                let notifications = await post.user.notifications
-                for (let index = 0; index < notifications.length; index++) {
-                    const notif = await populateNotificationById(notifications[index]._id)
-                    if (notif && notif.answer && notif.post && notif.post.title === args.title) {
-                        correctNotifs.push(notif)
-                    }
-                    
-                }
-                return correctNotifs;
-            }
-            else{
-                return []
-            }
+        getPostJoinRequests: async (root, args, context) => {
+            const query = `SELECT _id FROM join_requests WHERE post_id=$1;`
+            const values = [args.post_id]
+            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
+            return await Promise.all(joinRequests);
+        },
+        getUserPostQuestions: async (root, args, context) => {
+            const query = `SELECT _id FROM notification WHERE post_id=$1 AND userto_id=$2 AND type=$3;`
+            const values = [args.post_id, args.user_id, Notification.Types.Question]
+            const notifications = (await db.query(query, values)).rows.map(async notification => await new Notification(notification._id))
+            return await Promise.all(notifications);
         },
         searchPosts: async (root, args) => {
             const eventQuery = args.eventQuery
@@ -52,7 +44,7 @@ module.exports = {
             // NOTE will become very expensive after a large number of posts exist
             // currently limited to 100
             const query = `SELECT _id FROM user_posts ORDER BY time ASC LIMIT 100;`
-            let allPosts = (await db.query(query)).rows.map(async post => await populatePostById(post._id))
+            let allPosts = (await db.query(query)).rows.map(async post => await new Post(post._id))
             // Resolve all posts
             allPosts = await Promise.all(allPosts);
             const filterString = args.filterString.toLowerCase()
@@ -105,7 +97,7 @@ module.exports = {
                     targetPosts.push(post)
                 }
             }
-            targetPosts.map(async post => populatePostById(post._id))
+            targetPosts.map(async post => await new Post(post._id))
             if (targetPosts.length > 6) { targetPosts = targetPosts.slice(0,6) }
             if (targetPosts.length > 1) return targetPosts
             if (targetPosts.length === 1) return targetPosts
@@ -119,39 +111,39 @@ module.exports = {
 
             const query = 'SELECT _id FROM user_posts WHERE _id IN (' + params.join(',') + ')'
             const result = await db.query(query, args.idList)
-            return result.rows.map(async post => populatePostById(post._id))
+            return result.rows.map(async post => await new Post(post._id))
         },
         findPost: async (root, args) => {
             const query = `SELECT _id FROM user_posts WHERE title=$1`
             const values = [args.title]
     
             const post = (await db.query(query, values)).rows[0]
-            return await populatePostById(post._id)
+            return await new Post(post._id)
         },
         findUser: async (root, args) => {
             const query = `SELECT _id FROM user_account WHERE username=$1`
             const values = [args.username]
             const user = (await db.query(query, values)).rows[0]
-            return await populateUserById(user._id)
+            return await new User(user._id)
         },
         allUsers: async (root, args) => {
             const userQuery = `SELECT _id FROM user_account;`
     
             const result = await db.query(userQuery)
-            return result.rows.map(async user => populateUserById(user._id))
+            return result.rows.map(async user => new User(user._id))
         },
         someUsers: async (root, args) => {
             const userQuery = `SELECT _id FROM user_account;`
 
             const result = await db.query(userQuery)
-            const allUsers =  await Promise.all(result.rows.map(async user => populateUserById(user._id)))
+            const allUsers =  await Promise.all(result.rows.map(async user => new User(user._id)))
             return allUsers.slice(args.skip, args.skip + args.first)
         },
         allPosts: async (root, args) => {
             const query = `SELECT _id FROM user_posts;`
     
             const result = await db.query(query)
-            return result.rows.map(async post => populatePostById(post._id))
+            return result.rows.map(async post => await new Post(post._id))
         },
         allSkills: async (root, args) => {
             const query = `SELECT * FROM skills;`
@@ -169,7 +161,8 @@ module.exports = {
             const query = `SELECT _id FROM notification;`
     
             const result = await db.query(query)
-            return result.rows.map(async notification => populateNotificationById(notification._id))
+            const resolved = await Promise.all(await result.rows.map(async notification => await new Notification(notification._id)))
+            return resolved
         },
     }
 }
