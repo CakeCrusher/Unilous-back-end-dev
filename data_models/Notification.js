@@ -31,7 +31,7 @@ class Notification extends DataClass{
                     this.question = (await db.query(notificationQuestionQuery, notificationQuestionValues)).rows[0].question
                     break;
                 case Notification.Types.JoinRequest:
-                    const notificationJoinRequestQuery = `SELECT skill_id, message FROM notification_join_request WHERE notification_id=$1;`
+                    const notificationJoinRequestQuery = `SELECT skill_bucket_id, message FROM notification_join_request WHERE notification_id=$1;`
                     const notificationJoinRequestValues = [this._id]
                     const notificationJoinRequest = (await db.query(notificationJoinRequestQuery, notificationJoinRequestValues)).rows[0]
                     this.skill_joining = await new SkillBucket(notificationJoinRequest.skill_bucket_id)
