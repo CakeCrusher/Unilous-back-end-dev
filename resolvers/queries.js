@@ -52,7 +52,7 @@ module.exports = {
             // NOTE will become very expensive after a large number of posts exist
             // currently limited to 100
             const query = `SELECT _id FROM user_posts ORDER BY time ASC LIMIT 100;`
-            let allPosts = (await db.query(query)).rows.map(async post => await new Post(post._id))
+            let allPosts = await Promise.all((await db.query(query)).rows.map(async post => await new Post(post._id)))
             // Resolve all posts
             allPosts = await Promise.all(allPosts);
             const filterString = args.filterString.toLowerCase()
