@@ -39,7 +39,7 @@ type Query {
         post_id: ID!
         user_id: ID!
     ): [QuestionNotification!]
-    postQuestions(
+    getPostQuestions(
         post_id: ID!
     ): [Question!]
     userPostQuestions(

@@ -3,7 +3,6 @@ const DataClass = require('./DataClass')
 const Post = require('./Post')
 const Skill = require('./Skill')
 
-
 class SkillBucket extends DataClass{
     constructor(id){
         super(id)
@@ -34,15 +33,10 @@ class SkillBucket extends DataClass{
             }
         });
 
-        Object.defineProperty(this, 'skill', {
-            get: async function () {
-                return await new Skill(this._skill_id)
-            }
-        });
-
         Object.defineProperty(this, 'collaborators', {
             get: async function () {
-                const query = `SELECT user_id FROM post_collaberators WHERE skill_bucket_id=$1;`
+                const User = require('./User')
+                const query = `SELECT user_id FROM post_collaborators WHERE skill_bucket_id=$1;`
                 const values = [this._id]
                 const collaborators = (await db.query(query, values)).rows.map(async collaborator => await new User(collaborator.user_id))
                 return await Promise.all(collaborators);
