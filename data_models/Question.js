@@ -16,7 +16,7 @@ class JoinRequest extends DataClass{
             this._post_id = db_question.post_id
 
             this.date = db_question.date
-            this.question = db_question.message
+            this.question = db_question.question
             this.accepted = db_question.accepted
             this.response = db_question.response
 
