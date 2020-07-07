@@ -32,7 +32,7 @@ module.exports = {
             return await Promise.all(questions);
         },
         getUserPostQuestions: async (root, args, context) => {
-            const query = `SELECT _id FROM notification WHERE post_id=$1 AND userto_id=$2 AND type=$3;`
+            const query = `SELECT _id FROM notification WHERE post_id=$1 AND userfrom_id=$2 AND type=$3;`
             const values = [args.post_id, args.user_id, Notification.Types.Question]
             const notifications = (await db.query(query, values)).rows.map(async notification => await new Notification(notification._id))
             return await Promise.all(notifications);
