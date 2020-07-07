@@ -20,7 +20,7 @@ module.exports = {
             return user.notifications
         },
         getPostJoinRequests: async (root, args, context) => {
-            const query = `SELECT _id FROM join_requests WHERE post_id=$1;`
+            const query = `SELECT _id FROM join_request WHERE post_id=$1;`
             const values = [args.post_id]
             const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
             return await Promise.all(joinRequests);
@@ -32,10 +32,10 @@ module.exports = {
             return await Promise.all(questions);
         },
         getUserPostQuestions: async (root, args, context) => {
-            const query = `SELECT _id FROM notification WHERE post_id=$1 AND userto_id=$2 AND type=$3;`
-            const values = [args.post_id, args.user_id, Notification.Types.Question]
-            const notifications = (await db.query(query, values)).rows.map(async notification => await new Notification(notification._id))
-            return await Promise.all(notifications);
+            const query = `SELECT _id FROM question WHERE post_id=$1 AND user_from_id=$2;`
+            const values = [args.post_id, args.user_id]
+            const questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
+            return await Promise.all(questions);
         },
         searchPosts: async (root, args) => {
             const eventQuery = args.eventQuery
