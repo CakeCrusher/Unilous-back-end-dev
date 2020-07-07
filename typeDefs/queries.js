@@ -39,5 +39,12 @@ type Query {
         post_id: ID!
         user_id: ID!
     ): [QuestionNotification!]
+    getPostQuestions(
+        post_id: ID!
+    ): [Question!]
+    userPostQuestions(
+        post_id: ID!
+        user_id: ID!
+    ): [Question!]
 }
 `

@@ -95,5 +95,18 @@ type Mutation {
         joinRequest_id: ID!
         reason: String!
     ): JoinRequest!
+    createQuestion(
+        user_from: ID! 
+        post_id: ID!
+        question: String!
+    ): Question!
+    acceptQuestion(
+        question_id: ID!
+        response: String!
+    ): Question!
+    declineQuestion(
+        question_id: ID!
+        response: String!
+    ): Question!
 }
 `
