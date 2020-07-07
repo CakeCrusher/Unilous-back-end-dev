@@ -35,16 +35,16 @@ type Query {
     getPostJoinRequests(
         post_id: ID!
     ): [JoinRequest!]
+    getUserPostJoinRequests(
+        post_id: ID!
+        user_id: ID!
+    ): [JoinRequest!]
     getUserPostQuestions(
         post_id: ID!
         user_id: ID!
     ): [QuestionNotification!]
     getPostQuestions(
         post_id: ID!
-    ): [Question!]
-    userPostQuestions(
-        post_id: ID!
-        user_id: ID!
     ): [Question!]
 }
 `

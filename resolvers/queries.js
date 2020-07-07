@@ -25,6 +25,12 @@ module.exports = {
             const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
             return await Promise.all(joinRequests);
         },
+        getUserPostJoinRequests: async (root, args, context) => {
+            const query = `SELECT _id FROM join_request WHERE post_id=$1 AND user_from_id=$2;`
+            const values = [args.post_id, args.user_id]
+            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
+            return await Promise.all(joinRequests);
+        },
         getPostQuestions: async (root, args, context) => {
             const query = `SELECT _id FROM question WHERE post_id=$1;`
             const values = [args.post_id]
