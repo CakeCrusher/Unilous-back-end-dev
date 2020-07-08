@@ -15,7 +15,7 @@ class JoinRequest extends DataClass{
 
             this._user_from_id = db_join_request.user_from_id
             this._post_id = db_join_request.post_id
-            this._skill_id = db_join_request.skill_id
+            this._skill_bucket_id = db_join_request.skill_bucket_id
 
             this.date = db_join_request.date
             this.message = db_join_request.message
@@ -43,7 +43,7 @@ class JoinRequest extends DataClass{
 
         Object.defineProperty(this, 'skill_joining', {
             get: async function () {
-                const skillBucket = await new SkillBucket(this._skill_id)
+                const skillBucket = await new SkillBucket(this._skill_bucket_id)
                 return skillBucket
             }
         });
