@@ -25,7 +25,8 @@ class Content extends DataClass {
     defineProperties(){
         Object.defineProperty(this, 'post', {
             get: async function () {
-                return await new Post(content.post_id);
+                const post = await new Post(content.post_id);
+                return post
             }
         });
     }

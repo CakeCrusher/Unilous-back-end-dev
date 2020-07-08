@@ -6,11 +6,14 @@ const Skill = require('./Skill')
 class SkillBucket extends DataClass{
     constructor(id){
         super(id)
-
         return this.promiseDecorator(async () => {
             const query = `SELECT * FROM skill_bucket WHERE _id=$1`
             const values = [id]
             const db_skill_bucket = (await db.query(query, values)).rows[0]
+    
+            if(db_skill_bucket == undefined){
+                throw new Error(`${this.constructor.name} does not exist in database with id:${id}`)
+            }
 
             this.skill_help_needed = db_skill_bucket.skill_help_needed
             this._skill_id = db_skill_bucket.skill_id
@@ -23,13 +26,15 @@ class SkillBucket extends DataClass{
     defineProperties(){
         Object.defineProperty(this, 'skill', {
             get: async function () {
-                return await new Skill(this._skill_id)
+                const skill = await new Skill(this._skill_id)
+                return skill
             }
         });
 
         Object.defineProperty(this, 'post', {
             get: async function () {
-                return await new Post(this._post_id)
+                const post = await new Post(this._post_id)
+                return post
             }
         });
 

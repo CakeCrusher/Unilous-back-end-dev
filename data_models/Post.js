@@ -30,7 +30,8 @@ class Post extends DataClass{
         Object.defineProperty(this, 'user', {
             get: async function () {
                 const User = require('./User')
-                return await new User(this._user_id)
+                const user = await new User(this._user_id)
+                return user
             }
         });
 

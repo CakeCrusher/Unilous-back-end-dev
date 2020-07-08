@@ -19,29 +19,41 @@ module.exports = {
             const user = await new User(args.user)
             return user.notifications
         },
-        getPostJoinRequests: async (root, args, context) => {
+        getUserPostJoinRequests: async (root, args, context) => {
             const query = `SELECT _id FROM join_request WHERE post_id=$1;`
             const values = [args.post_id]
-            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
-            return await Promise.all(joinRequests);
-        },
-        getUserPostJoinRequests: async (root, args, context) => {
-            const query = `SELECT _id FROM join_request WHERE post_id=$1 AND user_from_id=$2;`
-            const values = [args.post_id, args.user_id]
-            const joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
-            return await Promise.all(joinRequests);
-        },
-        getPostQuestions: async (root, args, context) => {
-            const query = `SELECT _id FROM question WHERE post_id=$1;`
-            const values = [args.post_id]
-            const questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
-            return await Promise.all(questions);
+            let joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
+            joinRequests = await Promise.all(joinRequests);
+
+            const post = await new Post(args.post_id)
+            const user = await post.user
+
+            if(user._id == args.user_id){
+                const query = `SELECT _id FROM join_request WHERE post_id=$1 AND user_from_id=$2;`
+                const values = [args.post_id, args.user_id]
+                joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
+                return await Promise.all(joinRequests);
+            }
+
+            return joinRequests
+
         },
         getUserPostQuestions: async (root, args, context) => {
-            const query = `SELECT _id FROM question WHERE post_id=$1 AND user_from_id=$2;`
-            const values = [args.post_id, args.user_id]
-            const questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
-            return await Promise.all(questions);
+            const query = `SELECT _id FROM question WHERE post_id=$1;`
+            const values = [args.post_id]
+            let questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
+            questions = await Promise.all(questions);
+
+            const post = await new Post(args.post_id)
+            const user = await post.user
+
+            if(user._id == args.user_id){
+                const query = `SELECT _id FROM question WHERE post_id=$1 AND user_from_id=$2;`
+                const values = [args.post_id, args.user_id]
+                questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
+                return await Promise.all(questions);
+            }
+            return questions;
         },
         searchPosts: async (root, args) => {
             const eventQuery = args.eventQuery

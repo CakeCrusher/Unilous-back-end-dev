@@ -29,19 +29,22 @@ class JoinRequest extends DataClass{
     defineProperties(){
         Object.defineProperty(this, 'user_from', {
             get: async function () {
-                return await new User(this._user_from_id)
+                const user = await new User(this._user_from_id)
+                return user
             }
         });
 
         Object.defineProperty(this, 'post', {
             get: async function () {
-                return await new Post(this._post_id)
+                const post = await new Post(this._post_id)
+                return post
             }
         });
 
         Object.defineProperty(this, 'skill_joining', {
             get: async function () {
-                return await new SkillBucket(this._skill_id)
+                const skillBucket = await new SkillBucket(this._skill_id)
+                return skillBucket
             }
         });
     }

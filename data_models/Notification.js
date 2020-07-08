@@ -51,7 +51,8 @@ class Notification extends DataClass{
         Object.defineProperty(this, 'user_from', {
             get: async function () {
                 const User = require('./User')
-                return await new User(this._user_from_id)
+                const user = await new User(this._user_from_id)
+                return user
             }
         });
 
@@ -59,7 +60,8 @@ class Notification extends DataClass{
             get: async function () {
                 // Allowed null
                 if(this._post_id){
-                    return await new Post(this._post_id)
+                    const post = await new Post(this._post_id)
+                    return post
                 }
                 return null
                 
