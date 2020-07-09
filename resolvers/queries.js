@@ -20,8 +20,8 @@ module.exports = {
             return user.notifications
         },
         getUserPostJoinRequests: async (root, args, context) => {
-            const query = `SELECT _id FROM join_request WHERE post_id=$1;`
-            const values = [args.post_id]
+            const query = `SELECT _id FROM join_request WHERE post_id=$1 AND user_from_id=$2;`
+            const values = [args.post_id, args.user_id]
             let joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
             joinRequests = await Promise.all(joinRequests);
 
@@ -29,8 +29,8 @@ module.exports = {
             const user = await post.user
 
             if(user._id == args.user_id){
-                const query = `SELECT _id FROM join_request WHERE post_id=$1 AND user_from_id=$2;`
-                const values = [args.post_id, args.user_id]
+                const query = `SELECT _id FROM join_request WHERE post_id=$1;`
+                const values = [args.post_id]
                 joinRequests = (await db.query(query, values)).rows.map(async joinRequest => await new JoinRequest(joinRequest._id))
                 return await Promise.all(joinRequests);
             }
@@ -39,8 +39,8 @@ module.exports = {
 
         },
         getUserPostQuestions: async (root, args, context) => {
-            const query = `SELECT _id FROM question WHERE post_id=$1;`
-            const values = [args.post_id]
+            const query = `SELECT _id FROM question WHERE post_id=$1 AND user_from_id=$2;`
+            const values = [args.post_id, args.user_id]
             let questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
             questions = await Promise.all(questions);
 
@@ -48,8 +48,8 @@ module.exports = {
             const user = await post.user
 
             if(user._id == args.user_id){
-                const query = `SELECT _id FROM question WHERE post_id=$1 AND user_from_id=$2;`
-                const values = [args.post_id, args.user_id]
+                const query = `SELECT _id FROM question WHERE post_id=$1;`
+                const values = [args.post_id]
                 questions = (await db.query(query, values)).rows.map(async question => await new Question(question._id))
                 return await Promise.all(questions);
             }
