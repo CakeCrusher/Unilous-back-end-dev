@@ -39,6 +39,6 @@ type Query {
     getUserPostQuestions(
         post_id: ID!
         user_id: ID!
-    ): [QuestionNotification!]
+    ): [Question!]
 }
 `
