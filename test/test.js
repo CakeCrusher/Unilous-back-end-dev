@@ -1,8 +1,8 @@
 var assert = require('assert');
-var db = require("./test_db");
-var fs = require('fs');
+//var db = require("./test_db");
+//var fs = require('fs');
 
-var sql = fs.readFileSync('init_database.sql').toString();
+//var sql = fs.readFileSync('init_database.sql').toString();
 
 import { withApollo } from "next-apollo"
 // import ApolloClient, { HttpLink, InMemoryCache } from "apollo-boost"
@@ -52,12 +52,12 @@ describe('queries', function () {
 
     // runs before each test in this block
     beforeEach(function() {
-        db.query("BEGIN");
+        //db.query("BEGIN");
     });
 
     // runs after each test in this block
     afterEach(function() {
-        db.query("ROLLBACK");
+        //db.query("ROLLBACK");
     });
 
     describe('searchAwaitingNotifs', function () {
